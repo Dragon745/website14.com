@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact Us - Website14</title>
+    <meta name="description" content="Get in touch with Website14 for professional web development services. Free consultation and quotes available." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link href="css/tailwind.css" rel="stylesheet">
+  </head>
+  <body class="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="/index.html" class="text-xl font-bold text-gray-900">Website14</a>
+          </div>
+          <div class="flex items-center space-x-8">
+            <a href="/services.html" class="text-gray-600 hover:text-gray-900 transition-colors">Services</a>
+            <a href="/about.html" class="text-gray-600 hover:text-gray-900 transition-colors">About</a>
+            <a href="/faq.html" class="text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
+            <a href="/contact.html" class="text-gray-600 hover:text-gray-900 transition-colors">Contact</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col justify-center items-center py-8">
+      <div class="w-full max-w-2xl mx-auto px-5">
+        <!-- Chat Container -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+          <!-- Chat Header -->
+          <div class="bg-gray-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <div>
+              <h1 class="font-inter text-xl font-semibold text-gray-800">Contact Us</h1>
+              <p class="text-gray-600 text-sm mt-1">Let's get started with your inquiry</p>
+            </div>
+            <button
+              id="new-chat-btn"
+              class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors duration-300 font-inter text-sm font-medium"
+              style="display: none;"
+            >
+              New Chat
+            </button>
+          </div>
+
+          <!-- Chat Messages -->
+          <div id="chat-messages" class="h-96 overflow-y-auto p-6 space-y-4">
+            <!-- Messages will be dynamically added here -->
+          </div>
+
+          <!-- Input Area -->
+          <div class="border-t border-gray-200 p-4">
+            <div class="flex gap-3">
+              <input
+                type="text"
+                id="user-input"
+                placeholder="Type your message..."
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent font-inter"
+                disabled
+              />
+              <button
+                id="send-btn"
+                class="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors duration-300 font-inter font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-8 mt-auto">
+      <div class="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="font-jetbrains text-xl font-bold text-black">Website14</div>
+        <ul class="flex gap-8 text-sm">
+          <li>
+            <a href="/services.html" class="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
+              Services
+            </a>
+          </li>
+          <li>
+            <a href="/about.html" class="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
+              About
+            </a>
+          </li>
+          <li>
+            <a href="/faq.html" class="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
+              FAQ
+            </a>
+          </li>
+          <li>
+            <a href="/contact.html" class="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
+              Contact
+            </a>
+          </li>
+        </ul>
+      </div>
+    </footer>
+
+    <!-- Main App Script -->
+    <script type="module" src="js/modules/app.js"></script>
+  </body>
+</html> 

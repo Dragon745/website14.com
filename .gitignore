@@ -134,3 +134,14 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Firebase configuration
+firebase.config.js
+
+# reCAPTCHA configuration
+recaptcha.config.js
+
+# PayPal configuration (contains sensitive API credentials)
+paypal-config.json
+
+.obsidian

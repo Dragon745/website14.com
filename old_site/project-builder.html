@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Builder - Website14</title>
+    <meta name="description" content="Build your custom website project with Website14. Get a free quote and start your web development journey." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link href="css/tailwind.css" rel="stylesheet">
+  </head>
+  <body class="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
+       <!-- Header -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="/index.html" class="text-xl font-bold text-gray-900">Website14</a>
+          </div>
+          <div class="flex items-center space-x-8">
+            <a href="/services.html" class="text-gray-600 hover:text-gray-900 transition-colors">Services</a>
+            <a href="/about.html" class="text-gray-600 hover:text-gray-900 transition-colors">About</a>
+            <a href="/faq.html" class="text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
+            <a href="/contact.html" class="text-gray-600 hover:text-gray-900 transition-colors">Contact</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1">
+      <div class="max-w-4xl mx-auto px-5 py-16">
+        <!-- Progress Bar -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600" id="progress-text"
+              >Question 1 of 5</span
+            >
+            <span class="text-sm text-gray-600" id="progress-percentage"
+              >20%</span
+            >
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div
+              class="bg-black h-2 rounded-full transition-all duration-300"
+              id="progress-bar"
+              style="width: 20%"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Question Container -->
+        <div
+          id="question-container"
+          class="bg-white border-2 border-gray-200 rounded-lg p-8 mb-8"
+        >
+          <h2
+            class="font-jetbrains text-2xl font-bold text-black mb-6"
+            id="question-title"
+          >
+            What type of website do you need?
+          </h2>
+          <div class="space-y-4" id="options-container">
+            <!-- Options will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="flex justify-between">
+          <button
+            id="prev-btn"
+            class="bg-white border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-500 transition-colors duration-300 hidden"
+          >
+            Previous
+          </button>
+          <button
+            id="next-btn"
+            class="bg-black text-white py-3 px-8 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 ml-auto"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-8 mt-auto">
+      <div
+        class="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="font-jetbrains text-xl font-bold text-black">Website14</div>
+        <ul class="flex gap-8 text-sm">
+          <li>
+            <a
+              href="services.html"
+              class="text-gray-500 hover:text-black transition-colors duration-300 font-inter"
+              >Services</a
+            >
+          </li>
+          <li>
+            <a
+              href="about.html"
+              class="text-gray-500 hover:text-black transition-colors duration-300 font-inter"
+              >About</a
+            >
+          </li>
+          <li>
+            <a
+              href="contact.html"
+              class="text-gray-500 hover:text-black transition-colors duration-300 font-inter"
+              >Contact</a
+            >
+          </li>
+          <li>
+            <a
+              href="blog.html"
+              class="text-gray-500 hover:text-black transition-colors duration-300 font-inter"
+              >Blog</a
+            >
+          </li>
+        </ul>
+      </div>
+    </footer>
+
+    <script>
+      // Questions and options
+      const questions = [
+        {
+          title: "What type of website do you need?",
+          options: [
+            { text: "Simple business website", value: "static", points: 1 },
+            { text: "Blog or content-heavy site", value: "dynamic", points: 2 },
+            {
+              text: "Online store with products",
+              value: "ecommerce",
+              points: 3,
+            },
+          ],
+        },
+        {
+          title: "How many pages do you need?",
+          options: [
+            { text: "1-5 pages", value: "small", points: 1 },
+            { text: "6-10 pages", value: "medium", points: 2 },
+            { text: "10+ pages", value: "large", points: 3 },
+          ],
+        },
+        {
+          title: "Do you need an admin panel?",
+          options: [
+            {
+              text: "No, I'll manage content through you",
+              value: "none",
+              points: 1,
+            },
+            {
+              text: "Yes, basic content management",
+              value: "basic",
+              points: 2,
+            },
+            {
+              text: "Yes, full dashboard with analytics",
+              value: "full",
+              points: 3,
+            },
+          ],
+        },
+        {
+          title: "Do you need payment processing?",
+          options: [
+            { text: "No payments needed", value: "none", points: 1 },
+            { text: "Simple contact forms", value: "forms", points: 1 },
+            {
+              text: "Full e-commerce with payments",
+              value: "ecommerce",
+              points: 3,
+            },
+          ],
+        },
+        {
+          title: "What's your timeline?",
+          options: [
+            { text: "No rush, take your time", value: "relaxed", points: 1 },
+            { text: "Standard 2-3 weeks", value: "standard", points: 2 },
+            { text: "Need it fast (1-2 weeks)", value: "urgent", points: 3 },
+          ],
+        },
+      ];
+
+      let currentQuestion = 0;
+      let answers = [];
+      let selectedOption = null;
+
+      // Initialize
+      function init() {
+        // Check if type is pre-selected from services page
+        const urlParams = new URLSearchParams(window.location.search);
+        const preSelectedType = urlParams.get("type");
+
+        if (preSelectedType) {
+          // Skip first question if type is pre-selected
+          answers.push({
+            question: 0,
+            value: preSelectedType,
+            points:
+              preSelectedType === "static"
+                ? 1
+                : preSelectedType === "dynamic"
+                ? 2
+                : 3,
+          });
+          currentQuestion = 1;
+          updateProgress();
+        }
+
+        showQuestion();
+      }
+
+      function showQuestion() {
+        const question = questions[currentQuestion];
+        document.getElementById("question-title").textContent = question.title;
+
+        const optionsContainer = document.getElementById("options-container");
+        optionsContainer.innerHTML = "";
+
+        question.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          button.className =
+            "w-full bg-white border-2 border-gray-300 rounded-lg p-6 text-left font-inter text-lg font-medium text-gray-800 cursor-pointer transition-all duration-300 hover:border-gray-500 hover:bg-gray-50";
+          button.textContent = option.text;
+          button.onclick = () => selectOption(index);
+          optionsContainer.appendChild(button);
+        });
+
+        updateProgress();
+        updateNavigation();
+      }
+
+      function selectOption(index) {
+        // Remove previous selection
+        const buttons = document.querySelectorAll("#options-container button");
+        buttons.forEach((btn) => {
+          btn.classList.remove("border-black", "bg-gray-100");
+          btn.classList.add("border-gray-300", "bg-white");
+        });
+
+        // Select new option
+        const selectedButton = buttons[index];
+        selectedButton.classList.remove("border-gray-300", "bg-white");
+        selectedButton.classList.add("border-black", "bg-gray-100");
+
+        selectedOption = index;
+        document.getElementById("next-btn").disabled = false;
+      }
+
+      function nextQuestion() {
+        if (selectedOption === null) return;
+
+        const question = questions[currentQuestion];
+        answers.push({
+          question: currentQuestion,
+          value: question.options[selectedOption].value,
+          points: question.options[selectedOption].points,
+        });
+
+        currentQuestion++;
+        selectedOption = null;
+
+        if (currentQuestion >= questions.length) {
+          showResults();
+        } else {
+          showQuestion();
+        }
+      }
+
+      function prevQuestion() {
+        if (currentQuestion > 0) {
+          currentQuestion--;
+          answers.pop();
+          selectedOption = null;
+          showQuestion();
+        }
+      }
+
+      function updateProgress() {
+        const progress = ((currentQuestion + 1) / questions.length) * 100;
+        document.getElementById("progress-bar").style.width = progress + "%";
+        document.getElementById("progress-text").textContent = `Question ${
+          currentQuestion + 1
+        } of ${questions.length}`;
+        document.getElementById("progress-percentage").textContent =
+          Math.round(progress) + "%";
+      }
+
+      function updateNavigation() {
+        const prevBtn = document.getElementById("prev-btn");
+        const nextBtn = document.getElementById("next-btn");
+
+        prevBtn.classList.toggle("hidden", currentQuestion === 0);
+        nextBtn.textContent =
+          currentQuestion === questions.length - 1 ? "Get Results" : "Next";
+      }
+
+      function showResults() {
+        const totalPoints = answers.reduce(
+          (sum, answer) => sum + answer.points,
+          0
+        );
+        let recommendation = "";
+        let setupPrice = "";
+        let monthlyPrice = "";
+        let features = [];
+
+        if (totalPoints <= 6) {
+          recommendation = "Static Website";
+          setupPrice = "₹4,999";
+          monthlyPrice = "₹399";
+          features = [
+            "5 Pages Included",
+            "Mobile-first Design",
+            "SEO + Speed Optimization",
+            "Unlimited Updates",
+          ];
+        } else if (totalPoints <= 10) {
+          recommendation = "Dynamic Website";
+          setupPrice = "₹9,999";
+          monthlyPrice = "₹599";
+          features = [
+            "7 Pages Included",
+            "Basic CMS Admin Panel",
+            "WordPress/Custom PHP",
+            "Unlimited Updates",
+          ];
+        } else {
+          recommendation = "E-commerce Website";
+          setupPrice = "₹14,999";
+          monthlyPrice = "₹899";
+          features = [
+            "10 Pages + 30 Products",
+            "Full Dashboard",
+            "2 Payment Gateways",
+            "Unlimited Updates",
+          ];
+        }
+
+        const container = document.getElementById("question-container");
+        container.innerHTML = `
+                <div class="text-center">
+                    <h2 class="font-jetbrains text-3xl font-bold text-black mb-6">Your Recommendation</h2>
+                    <div class="bg-gray-100 rounded-lg p-8 mb-8">
+                        <h3 class="font-jetbrains text-2xl font-bold text-black mb-4">${recommendation}</h3>
+                        <div class="text-4xl font-bold text-black mb-2">${setupPrice}</div>
+                        <div class="text-lg text-gray-600 mb-6">One-time setup + ${monthlyPrice}/month</div>
+                        <ul class="space-y-3 text-left max-w-md mx-auto">
+                            ${features
+                              .map(
+                                (feature) =>
+                                  `<li class="flex items-center text-gray-700"><span class="text-green-600 mr-2">✓</span>${feature}</li>`
+                              )
+                              .join("")}
+                        </ul>
+                    </div>
+                    <div class="space-y-4">
+                        <button onclick="window.location.href='payment.html?type=${recommendation
+                          .toLowerCase()
+                          .replace(
+                            " ",
+                            "-"
+                          )}&setup=${setupPrice}&monthly=${monthlyPrice}'" class="w-full bg-black text-white py-4 px-8 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 text-lg">
+                            Get Started Now
+                        </button>
+                        <button onclick="window.location.href='services.html'" class="w-full bg-white border-2 border-black text-black py-3 px-8 rounded-lg font-medium hover:bg-black hover:text-white transition-all duration-300">
+                            View All Services
+                        </button>
+                    </div>
+                </div>
+            `;
+
+        document.getElementById("prev-btn").classList.add("hidden");
+        document.getElementById("next-btn").classList.add("hidden");
+      }
+
+      // Event listeners
+      document
+        .getElementById("next-btn")
+        .addEventListener("click", nextQuestion);
+      document
+        .getElementById("prev-btn")
+        .addEventListener("click", prevQuestion);
+
+      // Initialize on load
+      init();
+    </script>
+  </body>
+</html>

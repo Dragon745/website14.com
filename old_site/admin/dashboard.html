@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Website14</title>
+    <meta name="description" content="Website14 Admin Dashboard - Manage messages, pricing, and website content." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="../css/tailwind.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 font-inter min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <h1 class="font-jetbrains text-xl font-bold text-black">Website14 Admin</h1>
+                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="performance-stats" class="text-xs text-gray-500"></div>
+                    <span id="admin-email" class="text-sm text-gray-600"></span>
+                    
+                    <button id="logout-btn" class="text-gray-500 hover:text-black transition-colors duration-300 text-sm">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex space-x-8">
+                <button id="messages-tab" class="py-4 px-1 border-b-2 border-black text-sm font-medium text-black">
+                    Messages
+                </button>
+                <button id="pricing-tab" class="py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Pricing Management
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Messages Section -->
+        <div id="messages-section">
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Total Messages</p>
+                            <p id="total-messages" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-green-100 rounded-lg">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Read</p>
+                            <p id="read-messages" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-yellow-100 rounded-lg">
+                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Unread</p>
+                            <p id="unread-messages" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-red-100 rounded-lg">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">New Today</p>
+                            <p id="today-messages" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-900">Contact Messages</h2>
+                        <div class="flex space-x-2">
+                            <button id="refresh-btn" class="px-3 py-1 bg-gray-800 text-white rounded text-sm hover:bg-gray-700 transition-colors duration-300">
+                                Refresh
+                            </button>
+                            <select id="filter-status" class="px-3 py-1 border border-gray-300 rounded text-sm">
+                                <option value="all">All Messages</option>
+                                <option value="unread">Unread Only</option>
+                                <option value="read">Read Only</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messages-tbody" class="bg-white divide-y divide-gray-200">
+                            <!-- Messages will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="loading" class="p-8 text-center text-gray-500">
+                    Loading messages...
+                </div>
+
+                <div id="no-messages" class="hidden p-8 text-center text-gray-500">
+                    No messages found.
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Management Section -->
+        <div id="pricing-section" class="hidden">
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-900">Pricing Management</h2>
+                        <div class="flex space-x-2">
+                            <button id="refresh-pricing-btn" class="px-3 py-1 bg-gray-800 text-white rounded text-sm hover:bg-gray-700 transition-colors duration-300">
+                                Refresh
+                            </button>
+                            <button id="save-pricing-btn" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors duration-300">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <!-- Currency Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Currency</label>
+                        <select id="currency-select" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="INR">INR - Indian Rupee</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                            <option value="AUD">AUD - Australian Dollar</option>
+                        </select>
+                    </div>
+
+                    <!-- Main Services Pricing -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Main Services</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Setup Fee</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Fee</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="main-services-tbody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Main services will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add-ons Pricing -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Add-ons & Extras</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-3">Extra Pages</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-700">Static Website Page</span>
+                                        <input type="number" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm" data-addon="extra-static-page" step="0.01" min="0">
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-700">Dynamic Website Page</span>
+                                        <input type="number" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm" data-addon="extra-dynamic-page" step="0.01" min="0">
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-700">E-commerce Page</span>
+                                        <input type="number" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm" data-addon="extra-ecommerce-page" step="0.01" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-3">E-commerce Features</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-700">Extra Product</span>
+                                        <input type="number" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm" data-addon="extra-product" step="0.01" min="0">
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-700">Extra Payment Gateway</span>
+                                        <input type="number" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm" data-addon="extra-payment-gateway" step="0.01" min="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-3">Design Services</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-700">Logo Design</span>
+                                        <input type="number" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm" data-addon="logo-design" step="0.01" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Hosting Pricing -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Email Hosting</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2">Monthly</h4>
+                                <input type="number" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" data-email="monthly" step="0.01" min="0">
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2">Yearly</h4>
+                                <input type="number" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" data-email="yearly" step="0.01" min="0">
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2">2 Year Plan</h4>
+                                <input type="number" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" data-email="2year" step="0.01" min="0">
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-900 mb-2">3 Year Plan</h4>
+                                <input type="number" class="w-full px-2 py-1 border border-gray-300 rounded text-sm" data-email="3year" step="0.01" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Long-term Hosting Plans -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Long-term Hosting Plans</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Yearly</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2 Year</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">3 Year</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="long-term-tbody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Long-term plans will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="pricing-loading" class="p-8 text-center text-gray-500">
+                        Loading pricing data...
+                    </div>
+
+                    <div id="no-pricing" class="hidden p-8 text-center text-gray-500">
+                        No pricing data found for this currency.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="../js/modules/firebase-config.js"></script>
+    <script type="module" src="js/dashboard.js"></script>
+</body>
+</html> 
