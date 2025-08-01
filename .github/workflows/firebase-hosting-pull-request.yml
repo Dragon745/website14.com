@@ -1,3 +1,4 @@
+# Deploy pre-built static files to Firebase Hosting
 name: Deploy to Firebase Hosting
 
 on:
@@ -18,5 +19,6 @@ jobs:
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_WEBSITE14_FB82E }}"
-          projectId: website14-fb82e
+          projectId: website14
           channelId: live
+          entryPoint: ./website14app

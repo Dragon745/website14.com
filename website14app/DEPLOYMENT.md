@@ -93,187 +93,154 @@ npm run lint         # Run ESLint
 npm run deploy       # Build + Deploy to Firebase
 npm run deploy:live  # Build + Deploy to live channel
 npm run deploy:preview # Build + Deploy to preview channel
+npm run build:local  # Build locally for GitHub deployment
 ```
 
 ### Maintenance
 
 ```bash
-npm run clean        # Clean build files
-npm run rebuild      # Clean + Rebuild
+npm run clean        # Clean build artifacts
+npm run rebuild      # Clean + rebuild
 ```
 
 ## 🚀 Deployment Workflow
 
-### Option 1: Local Build + Manual Deploy
+### Option 1: GitHub Actions (Recommended)
 
 1. **Build locally:**
 
-```bash
-npm run build
-```
+   ```bash
+   cd website14app
+   npm run build:local
+   ```
 
-2. **Deploy to Firebase:**
+2. **Commit and push:**
 
-```bash
-firebase deploy
-```
+   ```bash
+   git add out/
+   git commit -m "Build for deployment"
+   git push origin main
+   ```
 
-### Option 2: Automated GitHub Actions
+3. **GitHub Actions will automatically deploy to Firebase Hosting**
 
-1. **Push to GitHub:**
+### Option 2: Direct Firebase Deployment
 
-```bash
-git add .
-git commit -m "Update website"
-git push origin main
-```
+1. **Build and deploy:**
+   ```bash
+   cd website14app
+   npm run deploy
+   ```
 
-2. **GitHub Actions will automatically:**
-   - Build the project
-   - Deploy to Firebase Hosting
+### Option 3: Windows Batch File
 
-## 🔄 Automated Deployment Setup
+1. **Run the build script:**
 
-### GitHub Actions Workflow (`.github/workflows/deploy.yml`)
+   ```bash
+   cd website14app
+   build-and-deploy.bat
+   ```
 
-The workflow automatically:
+2. **Follow the prompts to commit and push**
 
-- ✅ Triggers on push to `main` branch
-- ✅ Sets up Node.js environment
-- ✅ Installs dependencies
-- ✅ Builds the project
-- ✅ Deploys to Firebase Hosting
+## 🔄 GitHub Actions Configuration
 
-### Required GitHub Secrets
+The project uses two GitHub Actions workflows:
 
-Add these secrets in your GitHub repository settings:
+1. **firebase-hosting-merge.yml** - Deploys on merge to main branch
+2. **firebase-hosting-pull-request.yml** - Deploys preview for pull requests
 
-1. **FIREBASE_SERVICE_ACCOUNT_WEBSITE14_FB82E**
-   - Generate from Firebase Console
-   - Go to Project Settings > Service Accounts
-   - Generate new private key
-   - Copy the JSON content to GitHub secret
+Both workflows:
 
-## 🌐 Deployment URLs
+- Use pre-built `out` folder (no build step in CI)
+- Deploy to Firebase Hosting
+- Use Firebase service account for authentication
 
-After deployment, your site will be available at:
-
-- **Production**: `https://website14-fb82e.web.app`
-- **Alternative**: `https://website14-fb82e.firebaseapp.com`
-
-## 📊 Monitoring
-
-### Firebase Console
-
-- Visit: https://console.firebase.google.com/project/website14-fb82e
-- Monitor hosting performance
-- View analytics
-- Check error logs
-
-### GitHub Actions
-
-- Visit: https://github.com/[username]/website14app/actions
-- Monitor deployment status
-- View build logs
-
-## 🔧 Troubleshooting
+## 🛠️ Troubleshooting
 
 ### Build Issues
 
-```bash
-# Clean and rebuild
-npm run clean
-npm run build
+1. **Clean and rebuild:**
 
-# Check for errors
-npm run lint
-```
+   ```bash
+   npm run clean
+   npm run build
+   ```
+
+2. **Check Next.js version compatibility:**
+
+   ```bash
+   npm list next
+   ```
+
+3. **Verify configuration:**
+   - Check `next.config.mjs` has `output: 'export'`
+   - Ensure `trailingSlash: true`
+   - Verify `images.unoptimized: true`
 
 ### Deployment Issues
 
-```bash
-# Check Firebase status
-firebase projects:list
-firebase hosting:sites:list
+1. **Check Firebase configuration:**
 
-# Redeploy
-firebase deploy --force
+   ```bash
+   firebase projects:list
+   firebase use website14
+   ```
+
+2. **Verify service account:**
+
+   - Check GitHub repository secrets
+   - Ensure `FIREBASE_SERVICE_ACCOUNT_WEBSITE14_FB82E` is set
+
+3. **Test local deployment:**
+   ```bash
+   firebase serve
+   ```
+
+### Common Errors
+
+1. **"npx failed with exit code 2"**
+
+   - This happens when GitHub Actions tries to build
+   - Solution: Use pre-built `out` folder (already configured)
+
+2. **"out directory not found"**
+
+   - Run `npm run build` locally first
+   - Commit the `out` folder to git
+
+3. **"Firebase service account not found"**
+   - Check GitHub repository secrets
+   - Verify the service account JSON is correct
+
+## 📁 Project Structure
+
+```
+website14app/
+├── src/                 # Source code
+├── public/              # Static assets
+├── out/                 # Built static files (committed to git)
+├── .next/               # Next.js build cache (ignored)
+├── firebase.json        # Firebase configuration
+├── next.config.mjs      # Next.js configuration
+├── package.json         # Dependencies and scripts
+└── build-and-deploy.bat # Windows build script
 ```
 
-### Common Issues
+## 🔐 Security Notes
 
-1. **Build fails with ESLint errors**
+- Firebase service account is stored as GitHub secret
+- No sensitive data in the `out` folder
+- All authentication handled by Firebase Auth
+- HTTPS enforced by Firebase Hosting
 
-   - ESLint is disabled in build config
-   - Fix issues locally with `npm run lint`
+## 📊 Monitoring
 
-2. **Firebase deploy fails**
+- **Firebase Console**: View hosting analytics
+- **GitHub Actions**: Monitor deployment status
+- **Firebase CLI**: Check deployment logs
 
-   - Check Firebase CLI is logged in: `firebase login`
-   - Verify project ID: `firebase use website14-fb82e`
-
-3. **GitHub Actions fails**
-   - Check Firebase service account secret
-   - Verify repository permissions
-
-## 🎯 Best Practices
-
-### Before Deploying
-
-1. ✅ Test locally: `npm run dev`
-2. ✅ Build locally: `npm run build`
-3. ✅ Check for errors: `npm run lint`
-4. ✅ Commit all changes
-
-### Deployment Checklist
-
-- [ ] All features working locally
-- [ ] Build completes successfully
-- [ ] No console errors
-- [ ] All pages accessible
-- [ ] Authentication working
-- [ ] Contact form functional
-- [ ] Preloading working
-
-## 📈 Performance Optimization
-
-### Build Optimization
-
-- Static export for fast loading
-- Image optimization disabled for static hosting
-- Preloading implemented for instant navigation
-
-### Firebase Hosting Features
-
-- Global CDN
-- Automatic HTTPS
-- Custom domain support
-- Analytics integration
-
-## 🔐 Security
-
-### Environment Variables
-
-- Firebase config is public (safe for client-side)
-- No sensitive data in code
-- Authentication handled by Firebase Auth
-
-### Security Headers
-
-- CORS configured
-- Cache headers optimized
-- HTTPS enforced
-
-## 📞 Support
-
-For deployment issues:
-
-1. Check Firebase Console logs
-2. Review GitHub Actions logs
-3. Test locally first
-4. Verify Firebase project settings
-
----
-
-**Last Updated**: January 2025
-**Version**: 1.0.0
+```bash
+firebase hosting:channel:list
+firebase hosting:releases:list
+```

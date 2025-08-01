@@ -11,6 +11,7 @@
     "deploy:preview": "npm run build && firebase hosting:channel:deploy preview",
     "deploy:live": "npm run build && firebase deploy --only hosting",
     "build:static": "next build && next export",
+    "build:local": "npm run clean && npm run build",
     "clean": "rm -rf .next out",
     "rebuild": "npm run clean && npm run build"
   },

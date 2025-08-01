@@ -11,7 +11,7 @@
 
 # next.js
 /.next/
-/out/
+# /out/ - REMOVED: We need to commit the built files for deployment
 
 # production
 /build
