@@ -1,5 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function About() {
   return (
@@ -12,22 +14,7 @@ export default function About() {
       </Head>
 
       <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <Link href="/" className="text-xl font-bold text-gray-900">Website14</Link>
-              </div>
-              <div className="flex items-center space-x-8">
-                <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors">Services</Link>
-                <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">About</Link>
-                <Link href="/faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
-                <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contact</Link>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header />
 
         {/* Main Content */}
         <div className="flex-1">
@@ -235,34 +222,7 @@ export default function About() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="bg-white border-t border-gray-200 py-8 mt-auto">
-          <div className="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="font-jetbrains text-xl font-bold text-black">Website14</div>
-            <ul className="flex gap-8 text-sm">
-              <li>
-                <Link href="/services" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Services
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

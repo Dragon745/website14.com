@@ -1,5 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function Services() {
   return (
@@ -12,22 +14,7 @@ export default function Services() {
       </Head>
 
       <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <Link href="/" className="text-xl font-bold text-gray-900">Website14</Link>
-              </div>
-              <div className="flex items-center space-x-8">
-                <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors">Services</Link>
-                <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">About</Link>
-                <Link href="/faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
-                <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contact</Link>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header />
 
         {/* Main Content */}
         <div className="flex-1">
@@ -38,7 +25,9 @@ export default function Services() {
                 <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
                 Trusted by 500+ businesses worldwide
               </div>
-              <h1 className="font-jetbrains text-4xl md:text-6xl font-bold text-black mb-6">
+              <h1
+                className="font-jetbrains text-4xl md:text-6xl font-bold text-black mb-6"
+              >
                 Professional Websites
                 <span className="text-blue-600">That Convert</span>
               </h1>
@@ -92,7 +81,9 @@ export default function Services() {
             {/* Services Grid with Enhanced CTAs */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
               {/* Static Website */}
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-8 hover:border-gray-400 transition-all duration-300 relative">
+              <div
+                className="bg-white border-2 border-gray-200 rounded-lg p-8 hover:border-gray-400 transition-all duration-300 relative"
+              >
                 <div className="mb-6">
                   <h3 className="font-jetbrains text-2xl font-bold text-black mb-2">
                     Static Website
@@ -132,7 +123,7 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/builder?type=static">
+                <Link href="/builder">
                   <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
                     Start Your Website
                   </button>
@@ -141,9 +132,14 @@ export default function Services() {
               </div>
 
               {/* Dynamic Website */}
-              <div className="bg-white border-2 border-gray-300 rounded-lg p-8 hover:border-gray-500 transition-all duration-300 relative">
+              <div
+                className="bg-white border-2 border-gray-300 rounded-lg p-8 hover:border-gray-500 transition-all duration-300 relative"
+              >
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-black text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+                  <span
+                    className="bg-black text-white px-4 py-1 rounded-full text-sm font-medium"
+                  >Most Popular</span
+                  >
                 </div>
                 <div className="mb-6">
                   <h3 className="font-jetbrains text-2xl font-bold text-black mb-2">
@@ -196,7 +192,7 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/builder?type=dynamic">
+                <Link href="/builder">
                   <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
                     Start Your Website
                   </button>
@@ -205,7 +201,9 @@ export default function Services() {
               </div>
 
               {/* E-commerce Website */}
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-8 hover:border-gray-400 transition-all duration-300 relative">
+              <div
+                className="bg-white border-2 border-gray-200 rounded-lg p-8 hover:border-gray-400 transition-all duration-300 relative"
+              >
                 <div className="mb-6">
                   <h3 className="font-jetbrains text-2xl font-bold text-black mb-2">
                     E-commerce Website
@@ -261,7 +259,7 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/builder?type=ecommerce">
+                <Link href="/builder">
                   <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
                     Start Your Store
                   </button>
@@ -289,7 +287,7 @@ export default function Services() {
                     </p>
                     <div className="bg-gray-50 border-l-4 border-black p-6 my-6">
                       <p className="text-lg font-medium text-gray-900 italic">
-                        "Why should people struggle with DIY tools like Wix or Shopify when they can get a professionally-built, lightning-fast, mobile-first website — with unlimited updates and ongoing support — for a price even cheaper than DIY platforms?"
+                        &quot;Why should people struggle with DIY tools like Wix or Shopify when they can get a professionally-built, lightning-fast, mobile-first website — with unlimited updates and ongoing support — for a price even cheaper than DIY platforms?"
                       </p>
                     </div>
                   </div>
@@ -399,7 +397,7 @@ export default function Services() {
                       <span className="ml-2 text-sm text-gray-600">5.0</span>
                     </div>
                     <p className="text-gray-700 mb-4">
-                      "Website14 built our e-commerce site in just 2 weeks. The site loads super fast and we're already seeing sales. Their unlimited updates policy is a game-changer!"
+                      &quot;Website14 built our e-commerce site in just 2 weeks. The site loads super fast and we're already seeing sales. Their unlimited updates policy is a game-changer!"
                     </p>
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
@@ -415,7 +413,7 @@ export default function Services() {
                       <span className="ml-2 text-sm text-gray-600">5.0</span>
                     </div>
                     <p className="text-gray-700 mb-4">
-                      "Finally, a web company that doesn't disappear after launch! They've been updating our site for 6 months and always respond within hours."
+                      &quot;Finally, a web company that doesn't disappear after launch! They've been updating our site for 6 months and always respond within hours."
                     </p>
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
@@ -431,7 +429,7 @@ export default function Services() {
                       <span className="ml-2 text-sm text-gray-600">5.0</span>
                     </div>
                     <p className="text-gray-700 mb-4">
-                      "I was paying $300/month for a basic Shopify store. Website14 built me a custom site for $59 setup + $5/month. It looks 10x better and converts better too!"
+                      &quot;I was paying $300/month for a basic Shopify store. Website14 built me a custom site for $59 setup + $5/month. It looks 10x better and converts better too!"
                     </p>
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
@@ -626,34 +624,7 @@ export default function Services() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="bg-white border-t border-gray-200 py-8 mt-auto">
-          <div className="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="font-jetbrains text-xl font-bold text-black">Website14</div>
-            <ul className="flex gap-8 text-sm">
-              <li>
-                <Link href="/services" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Services
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

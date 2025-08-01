@@ -1,5 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function FAQ() {
   return (
@@ -12,22 +14,7 @@ export default function FAQ() {
       </Head>
 
       <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <Link href="/" className="text-xl font-bold text-gray-900">Website14</Link>
-              </div>
-              <div className="flex items-center space-x-8">
-                <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors">Services</Link>
-                <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">About</Link>
-                <Link href="/faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
-                <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contact</Link>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header />
 
         {/* Main Content */}
         <div className="flex-1">
@@ -104,67 +91,26 @@ export default function FAQ() {
 
               {/* Technical Questions */}
               <div>
-                <h2 className="font-jetbrains text-2xl font-bold text-black mb-6">Technical Questions</h2>
+                <h2 className="font-jetbrains text-2xl font-bold text-black mb-6">Technical & Support</h2>
                 <div className="space-y-4">
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Are your websites mobile-friendly?</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3">What does &quot;unlimited updates" mean?</h3>
                     <p className="text-gray-700">
-                      Yes! All our websites are built mobile-first, meaning they're designed and optimized for mobile devices first, then enhanced for desktop. This ensures the best experience across all devices.
+                      Unlimited updates means we'll make content changes, add new pages, update information, and perform minor design tweaks at no additional cost. Major redesigns or new features may incur additional charges.
                     </p>
                   </div>
 
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Do you provide SEO optimization?</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Do you provide hosting and domain services?</h3>
                     <p className="text-gray-700">
-                      Yes, SEO optimization is included in all our packages. We implement technical SEO, optimize page speed, create proper meta tags, and ensure your website follows Google's best practices.
+                      Yes! Hosting is included in your monthly fee. We can help you transfer existing domains or purchase new ones. We also offer professional email hosting at $2.40/month per account.
                     </p>
                   </div>
 
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Can I update my website content myself?</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3">How do I get support when I need help?</h3>
                     <p className="text-gray-700">
-                      For dynamic websites, we provide a user-friendly admin panel where you can easily update content, add blog posts, manage products, and more. For static websites, we handle all updates for you.
-                    </p>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">What hosting and domain services do you provide?</h3>
-                    <p className="text-gray-700">
-                      We provide reliable hosting with 99.9% uptime, SSL certificates, and domain registration. We also offer email hosting packages starting at $2.4/month per email account.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Support Questions */}
-              <div>
-                <h2 className="font-jetbrains text-2xl font-bold text-black mb-6">Support & Maintenance</h2>
-                <div className="space-y-4">
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">What does "unlimited updates" mean?</h3>
-                    <p className="text-gray-700">
-                      Unlimited updates means we'll make any changes to your website content, design, or functionality at no extra cost. This includes text changes, image updates, new pages, feature additions, and more.
-                    </p>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">How quickly do you respond to support requests?</h3>
-                    <p className="text-gray-700">
-                      We typically respond to support requests within 2-4 hours during business hours, and within 24 hours for urgent requests outside business hours. Most updates are completed within 24-48 hours.
-                    </p>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Do you provide website backups?</h3>
-                    <p className="text-gray-700">
-                      Yes! We automatically backup your website daily and store backups securely. In case of any issues, we can restore your website to a previous version within minutes.
-                    </p>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">What happens if my website goes down?</h3>
-                    <p className="text-gray-700">
-                      We monitor all websites 24/7 and are immediately notified of any issues. If your website goes down, we'll fix it within 2-4 hours, and often much faster. Our hosting infrastructure has 99.9% uptime.
+                      We offer 24/7 support through multiple channels: email, live chat, and phone. Our average response time is under 2 hours, and most issues are resolved within 24 hours.
                     </p>
                   </div>
                 </div>
@@ -172,26 +118,26 @@ export default function FAQ() {
 
               {/* E-commerce Questions */}
               <div>
-                <h2 className="font-jetbrains text-2xl font-bold text-black mb-6">E-commerce Questions</h2>
+                <h2 className="font-jetbrains text-2xl font-bold text-black mb-6">E-commerce & Online Stores</h2>
                 <div className="space-y-4">
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">What payment gateways do you support?</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Can you build an online store?</h3>
                     <p className="text-gray-700">
-                      We support all major payment gateways including Stripe, PayPal, Square, and more. We can integrate with any payment processor you prefer, and we handle the secure setup and testing.
+                      Absolutely! Our e-commerce package includes product management, payment gateway integration, order processing, inventory tracking, and shipping calculations. Starting at $180 setup + $11/month.
                     </p>
                   </div>
 
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Can I manage my inventory online?</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Which payment gateways do you support?</h3>
                     <p className="text-gray-700">
-                      Yes! Our e-commerce websites include a comprehensive admin panel where you can manage products, inventory, orders, customers, and sales reports. You can also integrate with external inventory systems.
+                      We support all major payment gateways including PayPal, Stripe, Square, and regional payment methods. We can integrate multiple payment options for better customer experience.
                     </p>
                   </div>
 
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Do you handle shipping calculations?</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3">How many products can I sell?</h3>
                     <p className="text-gray-700">
-                      Yes, we can integrate with major shipping carriers like UPS, FedEx, and USPS for real-time shipping calculations. We also support flat-rate shipping, free shipping thresholds, and custom shipping rules.
+                      Our e-commerce package includes up to 30 products. Additional products cost $0.20 each. For larger catalogs, we offer custom solutions starting at 100+ products.
                     </p>
                   </div>
                 </div>
@@ -204,28 +150,21 @@ export default function FAQ() {
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h3 className="font-semibold text-lg text-gray-900 mb-3">How do I get started?</h3>
                     <p className="text-gray-700">
-                      Getting started is easy! Simply contact us through our contact form or call us. We'll schedule a free consultation to discuss your needs, provide a custom quote, and create a project timeline.
+                      Getting started is easy! Simply fill out our project builder form, schedule a free consultation, or contact us directly. We'll discuss your needs and provide a custom quote within 24 hours.
                     </p>
                   </div>
 
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h3 className="font-semibold text-lg text-gray-900 mb-3">What information do you need from me?</h3>
                     <p className="text-gray-700">
-                      We'll need: your business information, target audience, website goals, content (text and images), brand colors/preferences, and any specific features you want. Don't worry if you don't have everything ready - we can help you create content.
+                      We'll need: your business information, design preferences, content (text and images), and any specific features you want. Don't worry if you don't have everything ready - we can help you create content.
                     </p>
                   </div>
 
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Can I see progress during development?</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-3">Can I see progress updates?</h3>
                     <p className="text-gray-700">
-                      Absolutely! We provide regular updates and can share preview links so you can see your website as it's being built. We welcome feedback throughout the process to ensure you're completely satisfied.
-                    </p>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-3">What happens after my website launches?</h3>
-                    <p className="text-gray-700">
-                      After launch, we provide training on how to use your website, set up your admin access, and ensure everything is working perfectly. Then we're here for unlimited updates and ongoing support.
+                      Yes! We provide regular updates throughout the development process. You'll have access to a client portal where you can see progress, provide feedback, and request changes in real-time.
                     </p>
                   </div>
                 </div>
@@ -233,22 +172,22 @@ export default function FAQ() {
             </div>
           </div>
 
-          {/* Contact CTA */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+          {/* CTA Section */}
+          <div className="bg-black text-white py-16">
             <div className="max-w-6xl mx-auto px-5 text-center">
               <h2 className="font-jetbrains text-3xl font-bold mb-4">Still Have Questions?</h2>
-              <p className="text-xl mb-8 opacity-90">
-                We're here to help! Contact us for personalized answers to your specific questions.
+              <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+                Can't find what you're looking for? Our team is here to help. Get in touch for personalized answers.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/contact">
-                  <button className="bg-white text-blue-600 py-4 px-8 rounded-lg font-medium hover:bg-gray-100 transition-all duration-300 text-lg">
+                  <button className="bg-white text-black py-3 px-8 rounded-lg font-medium hover:bg-gray-100 transition-all duration-300 text-lg">
                     Contact Us
                   </button>
                 </Link>
-                <Link href="/services">
-                  <button className="border-2 border-white text-white py-4 px-8 rounded-lg font-medium hover:bg-white hover:text-blue-600 transition-all duration-300 text-lg">
-                    View Services
+                <Link href="/builder">
+                  <button className="border-2 border-white text-white py-3 px-8 rounded-lg font-medium hover:bg-white hover:text-black transition-all duration-300 text-lg">
+                    Get Free Quote
                   </button>
                 </Link>
               </div>
@@ -256,34 +195,7 @@ export default function FAQ() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="bg-white border-t border-gray-200 py-8 mt-auto">
-          <div className="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="font-jetbrains text-xl font-bold text-black">Website14</div>
-            <ul className="flex gap-8 text-sm">
-              <li>
-                <Link href="/services" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Services
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

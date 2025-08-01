@@ -1,7 +1,54 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { auth } from '../lib/firebase';
+import ContactChat from '../components/ContactChat';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function Contact() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <>
+        <Head>
+          <title>Contact Us - Website14</title>
+          <meta name="description" content="Get in touch with Website14 for professional web development services. Free consultation and quotes available." />
+          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+          <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        </Head>
+
+        <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
+          <Header />
+
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+              <p className="mt-4 text-gray-600">Checking authentication...</p>
+            </div>
+          </div>
+
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Head>
@@ -12,99 +59,49 @@ export default function Contact() {
       </Head>
 
       <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <Link href="/" className="text-xl font-bold text-gray-900">Website14</Link>
-              </div>
-              <div className="flex items-center space-x-8">
-                <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors">Services</Link>
-                <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">About</Link>
-                <Link href="/faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
-                <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contact</Link>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col justify-center items-center py-8">
           <div className="w-full max-w-2xl mx-auto px-5">
-            {/* Chat Container */}
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-              {/* Chat Header */}
-              <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <div>
-                  <h1 className="font-inter text-xl font-semibold text-gray-800">Contact Us</h1>
-                  <p className="text-gray-600 text-sm mt-1">Let's get started with your inquiry</p>
+            {user ? (
+              <ContactChat />
+            ) : (
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 text-center">
+                <div className="mb-6">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h2>
+                  <p className="text-gray-600 mb-6">
+                    To contact our team, please log in to your account. This helps us provide better service and track your inquiries.
+                  </p>
                 </div>
-                <button
-                  id="new-chat-btn"
-                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors duration-300 font-inter text-sm font-medium"
-                  style={{ display: 'none' }}
-                >
-                  New Chat
-                </button>
-              </div>
 
-              {/* Chat Messages */}
-              <div id="chat-messages" className="h-96 overflow-y-auto p-6 space-y-4">
-                {/* Messages will be dynamically added here */}
-              </div>
-
-              {/* Input Area */}
-              <div className="border-t border-gray-200 p-4">
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    id="user-input"
-                    placeholder="Type your message..."
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent font-inter"
-                    disabled
-                  />
-                  <button
-                    id="send-btn"
-                    className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors duration-300 font-inter font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled
+                <div className="space-y-4">
+                  <Link
+                    href={`/login?returnUrl=${encodeURIComponent(router.asPath)}`}
+                    className="inline-block w-full bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors duration-300 font-medium"
                   >
-                    Send
-                  </button>
+                    Sign In to Continue
+                  </Link>
+
+                  <div className="text-sm text-gray-500">
+                    Don't have an account?{' '}
+                    <Link
+                      href={`/signup?returnUrl=${encodeURIComponent(router.asPath)}`}
+                      className="text-black hover:text-gray-800 font-medium"
+                    >
+                      Sign up here
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="bg-white border-t border-gray-200 py-8 mt-auto">
-          <div className="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="font-jetbrains text-xl font-bold text-black">Website14</div>
-            <ul className="flex gap-8 text-sm">
-              <li>
-                <Link href="/services" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Services
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

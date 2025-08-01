@@ -1,328 +1,791 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { auth } from '../lib/firebase';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function Builder() {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState([]);
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const [currentSection, setCurrentSection] = useState(0);
+  const [formData, setFormData] = useState({
+    // Lead Information
+    name: '',
+    email: '',
+    phone: '',
+    companyName: '',
 
-  // Questions and options
-  const questions = [
+    // Business Information
+    businessType: '',
+    currentWebsite: '',
+    currentWebsiteUrl: '',
+
+    // Website Requirements
+    primaryPurpose: '',
+    contentManagement: '',
+    userFeatures: '',
+
+    // E-commerce Requirements
+    productCount: '',
+    paymentMethods: [],
+    shippingOptions: '',
+
+    // Content Requirements
+    pages: [],
+    specialFeatures: [],
+    mediaContent: '',
+    customPages: '',
+
+    // Design Preferences
+    designStyle: '',
+    colorPreferences: '',
+    branding: '',
+
+    // Technical Requirements
+    mobileOptimization: '',
+    performanceRequirements: '',
+    integrations: [],
+
+    // Timeline & Budget
+    timeline: '',
+    budget: '',
+    support: '',
+
+    // Additional Information
+    specialRequirements: '',
+    competitorWebsites: '',
+    projectGoals: []
+  });
+
+  const sections = [
     {
-      title: "What type of website do you need?",
-      options: [
-        { text: "Simple business website", value: "static", points: 1 },
-        { text: "Blog or content-heavy site", value: "dynamic", points: 2 },
+      title: "Lead Information",
+      subtitle: "Let's start with your contact details",
+      fields: [
         {
-          text: "Online store with products",
-          value: "ecommerce",
-          points: 3,
+          type: "text",
+          label: "Full Name",
+          name: "name",
+          required: true,
+          placeholder: "Enter your full name"
         },
-      ],
+        {
+          type: "email",
+          label: "Email Address",
+          name: "email",
+          required: true,
+          placeholder: "Enter your email address"
+        },
+        {
+          type: "tel",
+          label: "Phone Number",
+          name: "phone",
+          required: true,
+          placeholder: "Enter your phone number"
+        },
+        {
+          type: "text",
+          label: "Company Name",
+          name: "companyName",
+          required: false,
+          placeholder: "Enter your company name (optional)"
+        }
+      ]
     },
     {
-      title: "How many pages do you need?",
-      options: [
-        { text: "1-5 pages", value: "small", points: 1 },
-        { text: "6-10 pages", value: "medium", points: 2 },
-        { text: "10+ pages", value: "large", points: 3 },
-      ],
+      title: "Business Information",
+      subtitle: "Tell us about your business",
+      fields: [
+        {
+          type: "select",
+          label: "What type of business do you have?",
+          name: "businessType",
+          required: true,
+          options: [
+            "Restaurant & Food Service",
+            "Retail & E-commerce",
+            "Healthcare & Medical",
+            "Real Estate",
+            "Professional Services",
+            "Startup & Technology",
+            "Education & Training",
+            "Manufacturing & Industrial",
+            "Construction & Contracting",
+            "Automotive & Transportation",
+            "Beauty & Personal Care",
+            "Fitness & Wellness",
+            "Entertainment & Media",
+            "Non-profit & Charity",
+            "Government & Public Sector",
+            "Other"
+          ]
+        },
+        {
+          type: "radio",
+          label: "Do you currently have a website?",
+          name: "currentWebsite",
+          required: true,
+          options: [
+            "No, this is my first website",
+            "Yes, but it's outdated",
+            "Yes, but I need a new one",
+            "Yes, but I want to improve it"
+          ]
+        },
+        {
+          type: "text",
+          label: "Current Website URL (if applicable)",
+          name: "currentWebsiteUrl",
+          required: false,
+          placeholder: "https://example.com",
+          showIf: "currentWebsite !== 'No, this is my first website'"
+        }
+      ]
     },
     {
-      title: "Do you need an admin panel?",
-      options: [
+      title: "Website Requirements",
+      subtitle: "What do you need your website to do?",
+      fields: [
         {
-          text: "No, I'll manage content through you",
-          value: "none",
-          points: 1,
+          type: "radio",
+          label: "What is the main purpose of your website?",
+          name: "primaryPurpose",
+          required: true,
+          options: [
+            "Static Website - Simple information site",
+            "Dynamic Website - Content management, blog, user accounts",
+            "E-commerce - Online store with products and payments"
+          ]
         },
         {
-          text: "Yes, basic content management",
-          value: "basic",
-          points: 2,
+          type: "radio",
+          label: "Do you need to update content regularly?",
+          name: "contentManagement",
+          required: true,
+          options: [
+            "No, static content is fine",
+            "Yes, I want to add blog posts",
+            "Yes, I need to update products/services frequently",
+            "Yes, I need full content management system"
+          ]
         },
         {
-          text: "Yes, full dashboard with analytics",
-          value: "full",
-          points: 3,
-        },
-      ],
+          type: "radio",
+          label: "Do you need user accounts or member areas?",
+          name: "userFeatures",
+          required: true,
+          options: [
+            "No user accounts needed",
+            "Yes, customer accounts for purchases",
+            "Yes, member-only content areas",
+            "Yes, user dashboard and profiles"
+          ]
+        }
+      ]
     },
     {
-      title: "Do you need payment processing?",
-      options: [
-        { text: "No payments needed", value: "none", points: 1 },
-        { text: "Simple contact forms", value: "forms", points: 1 },
+      title: "E-commerce Requirements",
+      subtitle: "Tell us about your online store needs",
+      fields: [
         {
-          text: "Full e-commerce with payments",
-          value: "ecommerce",
-          points: 3,
+          type: "number",
+          label: "How many products will you sell?",
+          name: "productCount",
+          required: true,
+          placeholder: "Enter number of products",
+          showIf: "primaryPurpose === 'E-commerce - Online store with products and payments'"
         },
-      ],
+        {
+          type: "checkbox",
+          label: "Which payment methods do you need?",
+          name: "paymentMethods",
+          required: true,
+          options: [
+            "PayPal",
+            "Credit/Debit Cards (Stripe)",
+            "Bank Transfer",
+            "Cash on Delivery"
+          ],
+          showIf: "primaryPurpose === 'E-commerce - Online store with products and payments'"
+        },
+        {
+          type: "radio",
+          label: "Do you need shipping calculations?",
+          name: "shippingOptions",
+          required: true,
+          options: [
+            "No shipping (digital products)",
+            "Fixed shipping rates",
+            "Weight-based shipping",
+            "Real-time shipping rates"
+          ],
+          showIf: "primaryPurpose === 'E-commerce - Online store with products and payments'"
+        }
+      ]
     },
     {
-      title: "What's your timeline?",
-      options: [
-        { text: "No rush, take your time", value: "relaxed", points: 1 },
-        { text: "Standard 2-3 weeks", value: "standard", points: 2 },
-        { text: "Need it fast (1-2 weeks)", value: "urgent", points: 3 },
-      ],
+      title: "Content Requirements",
+      subtitle: "What pages and features do you need?",
+      fields: [
+        {
+          type: "checkbox",
+          label: "Select the pages you need:",
+          name: "pages",
+          required: true,
+          options: [
+            "Home Page",
+            "About Us",
+            "Services/Products",
+            "Contact Us",
+            "Blog/News",
+            "Portfolio/Gallery",
+            "Testimonials/Reviews",
+            "FAQ",
+            "Team/Staff",
+            "Careers/Jobs",
+            "Privacy Policy",
+            "Terms of Service",
+            "Product Catalog",
+            "Product Details",
+            "Shopping Cart",
+            "Checkout",
+            "Order Tracking",
+            "Customer Account",
+            "Wishlist",
+            "Product Reviews",
+            "Service Details",
+            "Pricing",
+            "Booking/Appointment",
+            "Location/Branches",
+            "Downloads/Resources",
+            "Support/Help"
+          ]
+        },
+        {
+          type: "checkbox",
+          label: "Do you need any of these special features?",
+          name: "specialFeatures",
+          required: false,
+          options: [
+            "Blog/News Section",
+            "Portfolio/Gallery",
+            "Testimonials",
+            "FAQ Section",
+            "Newsletter Signup",
+            "Social Media Integration",
+            "Contact Forms",
+            "Appointment Booking",
+            "Live Chat",
+            "Multi-language"
+          ]
+        },
+        {
+          type: "radio",
+          label: "What type of content will you have?",
+          name: "mediaContent",
+          required: true,
+          options: [
+            "Text and images only",
+            "Videos and animations",
+            "File downloads (PDFs, documents)",
+            "Interactive elements (quizzes, calculators)"
+          ]
+        },
+        {
+          type: "textarea",
+          label: "Custom Pages (add any other pages you need):",
+          name: "customPages",
+          required: false,
+          placeholder: "Enter custom page names, one per line"
+        }
+      ]
     },
+    {
+      title: "Design Preferences",
+      subtitle: "How should your website look?",
+      fields: [
+        {
+          type: "radio",
+          label: "What style best represents your brand?",
+          name: "designStyle",
+          required: true,
+          options: [
+            "Modern & Minimal - Clean, simple design",
+            "Professional & Corporate - Business-focused",
+            "Creative & Artistic - Bold, colorful design",
+            "Traditional & Classic - Timeless, elegant",
+            "Tech & Innovative - Cutting-edge, futuristic"
+          ]
+        },
+        {
+          type: "radio",
+          label: "Do you have brand colors?",
+          name: "colorPreferences",
+          required: true,
+          options: [
+            "Yes, I have specific brand colors",
+            "No, I need help choosing colors",
+            "I want to use industry-appropriate colors"
+          ]
+        },
+        {
+          type: "radio",
+          label: "Do you have existing branding materials?",
+          name: "branding",
+          required: true,
+          options: [
+            "Yes, I have a logo and brand guidelines",
+            "Yes, I have a logo but need brand guidelines",
+            "No, I need logo design services",
+            "No, I want to use text-based branding"
+          ]
+        }
+      ]
+    },
+    {
+      title: "Technical Requirements",
+      subtitle: "Performance and integration needs",
+      fields: [
+        {
+          type: "radio",
+          label: "How important is mobile experience?",
+          name: "mobileOptimization",
+          required: true,
+          options: [
+            "Essential - Most of my customers use mobile",
+            "Important - Good mobile experience needed",
+            "Standard - Basic mobile optimization is fine"
+          ]
+        },
+        {
+          type: "radio",
+          label: "Do you need special performance features?",
+          name: "performanceRequirements",
+          required: true,
+          options: [
+            "Standard - Normal website performance",
+            "Fast Loading - Optimized for speed",
+            "High Traffic - Handle many visitors",
+            "SEO Optimized - Search engine focused"
+          ]
+        },
+        {
+          type: "checkbox",
+          label: "Do you need to connect with other services?",
+          name: "integrations",
+          required: false,
+          options: [
+            "Google Analytics",
+            "Social Media",
+            "Email Marketing",
+            "Payment Processing",
+            "Booking System"
+          ]
+        }
+      ]
+    },
+    {
+      title: "Timeline & Budget",
+      subtitle: "When do you need it and what's your budget?",
+      fields: [
+        {
+          type: "radio",
+          label: "When do you need your website?",
+          name: "timeline",
+          required: true,
+          options: [
+            "Urgent - Within 2 weeks",
+            "Standard - 3-4 weeks",
+            "Flexible - 4-6 weeks",
+            "No Rush - 6+ weeks"
+          ]
+        },
+        {
+          type: "radio",
+          label: "What's your budget for this project?",
+          name: "budget",
+          required: true,
+          options: [
+            "Basic - Essential features only",
+            "Standard - Good features and design",
+            "Premium - Advanced features and custom design"
+          ]
+        },
+        {
+          type: "radio",
+          label: "What level of support do you need after launch?",
+          name: "support",
+          required: true,
+          options: [
+            "Basic - Hosting and security updates",
+            "Standard - Regular updates and maintenance",
+            "Premium - Content updates and modifications"
+          ]
+        }
+      ]
+    },
+    {
+      title: "Additional Information",
+      subtitle: "Any other details we should know?",
+      fields: [
+        {
+          type: "textarea",
+          label: "Special Requirements",
+          name: "specialRequirements",
+          required: false,
+          placeholder: "Any specific features or requirements not mentioned above?"
+        },
+        {
+          type: "textarea",
+          label: "Competitor Websites",
+          name: "competitorWebsites",
+          required: false,
+          placeholder: "Do you have examples of websites you like?"
+        },
+        {
+          type: "checkbox",
+          label: "What are your main goals for this website?",
+          name: "projectGoals",
+          required: true,
+          options: [
+            "Generate Leads",
+            "Sell Products",
+            "Build Brand",
+            "Provide Information",
+            "Improve Customer Service"
+          ]
+        }
+      ]
+    }
   ];
 
   useEffect(() => {
-    // Check if type is pre-selected from services page
-    const urlParams = new URLSearchParams(window.location.search);
-    const preSelectedType = urlParams.get("type");
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+      }
+      setLoading(false);
+    });
 
-    if (preSelectedType) {
-      // Skip first question if type is pre-selected
-      setAnswers([{
-        question: 0,
-        value: preSelectedType,
-        points:
-          preSelectedType === "static"
-            ? 1
-            : preSelectedType === "dynamic"
-              ? 2
-              : 3,
-      }]);
-      setCurrentQuestion(1);
-    }
-  }, []);
+    return () => unsubscribe();
+  }, [router]);
 
-  const selectOption = (index) => {
-    setSelectedOption(index);
+  const handleInputChange = (name, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const nextQuestion = () => {
-    if (selectedOption === null) return;
-
-    const question = questions[currentQuestion];
-    const newAnswers = [...answers, {
-      question: currentQuestion,
-      value: question.options[selectedOption].value,
-      points: question.options[selectedOption].points,
-    }];
-
-    setAnswers(newAnswers);
-    setCurrentQuestion(currentQuestion + 1);
-    setSelectedOption(null);
+  const handleCheckboxChange = (name, value, checked) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+        ? [...(prev[name] || []), value]
+        : (prev[name] || []).filter(item => item !== value)
+    }));
   };
 
-  const prevQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-      setAnswers(answers.slice(0, -1));
-      setSelectedOption(null);
-    }
-  };
-
-  const showResults = () => {
-    const totalPoints = answers.reduce(
-      (sum, answer) => sum + answer.points,
-      0
-    );
-    let recommendation = "";
-    let setupPrice = "";
-    let monthlyPrice = "";
-    let features = [];
-
-    if (totalPoints <= 6) {
-      recommendation = "Static Website";
-      setupPrice = "$59";
-      monthlyPrice = "$5";
-      features = [
-        "5 Pages Included",
-        "Mobile-first Design",
-        "SEO + Speed Optimization",
-        "Unlimited Updates",
-      ];
-    } else if (totalPoints <= 10) {
-      recommendation = "Dynamic Website";
-      setupPrice = "$120";
-      monthlyPrice = "$7.2";
-      features = [
-        "7 Pages Included",
-        "Basic CMS Admin Panel",
-        "WordPress/Custom PHP",
-        "Unlimited Updates",
-      ];
+  const nextSection = () => {
+    if (currentSection < sections.length - 1) {
+      setCurrentSection(currentSection + 1);
     } else {
-      recommendation = "E-commerce Website";
-      setupPrice = "$180";
-      monthlyPrice = "$11";
-      features = [
-        "10 Pages + 30 Products",
-        "Full Dashboard",
-        "2 Payment Gateways",
-        "Unlimited Updates",
-      ];
+      submitForm();
     }
-
-    return (
-      <div className="text-center">
-        <h2 className="font-jetbrains text-3xl font-bold text-black mb-6">Your Recommendation</h2>
-        <div className="bg-gray-100 rounded-lg p-8 mb-8">
-          <h3 className="font-jetbrains text-2xl font-bold text-black mb-4">{recommendation}</h3>
-          <div className="text-4xl font-bold text-black mb-2">{setupPrice}</div>
-          <div className="text-lg text-gray-600 mb-6">One-time setup + {monthlyPrice}/month</div>
-          <ul className="space-y-3 text-left max-w-md mx-auto">
-            {features.map((feature, index) => (
-              <li key={index} className="flex items-center text-gray-700">
-                <span className="text-green-600 mr-2">✓</span>{feature}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="space-y-4">
-          <Link href={`/contact?type=${recommendation.toLowerCase().replace(" ", "-")}&setup=${setupPrice}&monthly=${monthlyPrice}`}>
-            <button className="w-full bg-black text-white py-4 px-8 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 text-lg">
-              Get Started Now
-            </button>
-          </Link>
-          <Link href="/services">
-            <button className="w-full bg-white border-2 border-black text-black py-3 px-8 rounded-lg font-medium hover:bg-black hover:text-white transition-all duration-300">
-              View All Services
-            </button>
-          </Link>
-        </div>
-      </div>
-    );
   };
 
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
-  const isLastQuestion = currentQuestion === questions.length - 1;
-  const showResultsPage = currentQuestion >= questions.length;
+  const prevSection = () => {
+    if (currentSection > 0) {
+      setCurrentSection(currentSection - 1);
+    }
+  };
+
+  const submitForm = () => {
+    // Calculate package recommendation based on form data
+    let recommendedPackage = "static";
+    let totalPoints = 0;
+
+    // Scoring logic based on form data
+    if (formData.primaryPurpose === "E-commerce - Online store with products and payments") {
+      recommendedPackage = "ecommerce";
+      totalPoints = 10;
+    } else if (formData.primaryPurpose === "Dynamic Website - Content management, blog, user accounts") {
+      recommendedPackage = "dynamic";
+      totalPoints = 6;
+    } else {
+      recommendedPackage = "static";
+      totalPoints = 3;
+    }
+
+    // Store results
+    localStorage.setItem("builderResults", JSON.stringify({
+      formData,
+      recommendedPackage,
+      totalPoints,
+      timestamp: new Date().toISOString()
+    }));
+
+    // Redirect to contact page
+    window.location.href = "/contact";
+  };
+
+  const getProgressPercentage = () => {
+    return ((currentSection + 1) / sections.length) * 100;
+  };
+
+  const renderField = (field) => {
+    const value = formData[field.name];
+
+    switch (field.type) {
+      case "text":
+      case "email":
+      case "tel":
+      case "number":
+        return (
+          <input
+            type={field.type}
+            value={value || ""}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.required}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+          />
+        );
+
+      case "textarea":
+        return (
+          <textarea
+            value={value || ""}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.required}
+            rows={4}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+          />
+        );
+
+      case "select":
+        return (
+          <select
+            value={value || ""}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            required={field.required}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+          >
+            <option value="">Select an option</option>
+            {field.options.map((option, index) => (
+              <option key={index} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
+
+      case "radio":
+        return (
+          <div className="space-y-3">
+            {field.options.map((option, index) => (
+              <label key={index} className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name={field.name}
+                  value={option}
+                  checked={value === option}
+                  onChange={(e) => handleInputChange(field.name, e.target.value)}
+                  required={field.required}
+                  className="w-4 h-4 text-black focus:ring-black"
+                />
+                <span className="text-gray-900">{option}</span>
+              </label>
+            ))}
+          </div>
+        );
+
+      case "checkbox":
+        return (
+          <div className="space-y-3">
+            {field.options.map((option, index) => (
+              <label key={index} className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  value={option}
+                  checked={value && value.includes(option)}
+                  onChange={(e) => handleCheckboxChange(field.name, option, e.target.checked)}
+                  required={field.required}
+                  className="w-4 h-4 text-black focus:ring-black"
+                />
+                <span className="text-gray-900">{option}</span>
+              </label>
+            ))}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const shouldShowField = (field) => {
+    if (!field.showIf) return true;
+
+    // Simple condition evaluation
+    const condition = field.showIf;
+    if (condition.includes("primaryPurpose")) {
+      const expectedValue = condition.match(/=== '([^']+)'/)?.[1];
+      return formData.primaryPurpose === expectedValue;
+    }
+    if (condition.includes("currentWebsite")) {
+      const expectedValue = condition.match(/!== '([^']+)'/)?.[1];
+      return formData.currentWebsite !== expectedValue;
+    }
+
+    return true;
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Head>
+          <title>Project Builder - Website14</title>
+          <meta name="description" content="Build your custom website with our interactive project builder. Get a personalized quote based on your needs." />
+          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+          <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        </Head>
+
+        <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
+          <Header />
+
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+              <p className="mt-4 text-gray-600">Checking authentication...</p>
+            </div>
+          </div>
+
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Head>
         <title>Project Builder - Website14</title>
-        <meta name="description" content="Build your custom website project with Website14. Get a free quote and start your web development journey." />
+        <meta name="description" content="Build your custom website with our interactive project builder. Get a personalized quote based on your needs." />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Head>
 
       <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <Link href="/" className="text-xl font-bold text-gray-900">Website14</Link>
-              </div>
-              <div className="flex items-center space-x-8">
-                <Link href="/services" className="text-gray-600 hover:text-gray-900 transition-colors">Services</Link>
-                <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">About</Link>
-                <Link href="/faq" className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
-                <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contact</Link>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header />
 
         {/* Main Content */}
-        <div className="flex-1">
-          <div className="max-w-4xl mx-auto px-5 py-16">
-            {/* Progress Bar */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">
-                  Question {currentQuestion + 1} of {questions.length}
-                </span>
-                <span className="text-sm text-gray-600">
-                  {Math.round(progress)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-black h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-            </div>
+        <div className="flex-1 flex flex-col justify-center items-center py-8">
+          <div className="w-full max-w-4xl mx-auto px-5">
+            {user ? (
+              <>
+                {/* Progress Bar */}
+                <div className="mb-8">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-600">
+                      Section {currentSection + 1} of {sections.length}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {Math.round(getProgressPercentage())}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-black h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${getProgressPercentage()}%` }}
+                    ></div>
+                  </div>
+                </div>
 
-            {/* Question Container */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-8 mb-8">
-              {showResultsPage ? (
-                showResults()
-              ) : (
-                <>
-                  <h2 className="font-jetbrains text-2xl font-bold text-black mb-6">
-                    {questions[currentQuestion].title}
+                {/* Section */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+                  <h2 className="font-jetbrains text-3xl font-bold text-black mb-2">
+                    {sections[currentSection].title}
                   </h2>
-                  <div className="space-y-4">
-                    {questions[currentQuestion].options.map((option, index) => (
-                      <button
-                        key={index}
-                        className={`w-full bg-white border-2 rounded-lg p-6 text-left font-inter text-lg font-medium text-gray-800 cursor-pointer transition-all duration-300 hover:border-gray-500 hover:bg-gray-50 ${selectedOption === index
-                            ? "border-black bg-gray-100"
-                            : "border-gray-300"
-                          }`}
-                        onClick={() => selectOption(index)}
-                      >
-                        {option.text}
-                      </button>
+                  <p className="text-gray-600 mb-8">
+                    {sections[currentSection].subtitle}
+                  </p>
+
+                  {/* Fields */}
+                  <div className="space-y-6">
+                    {sections[currentSection].fields.map((field, index) => (
+                      shouldShowField(field) && (
+                        <div key={index} className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            {field.label}
+                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                          </label>
+                          {renderField(field)}
+                        </div>
+                      )
                     ))}
                   </div>
-                </>
-              )}
-            </div>
+                </div>
 
-            {/* Navigation Buttons */}
-            {!showResultsPage && (
-              <div className="flex justify-between">
-                <button
-                  onClick={prevQuestion}
-                  className={`bg-white border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-500 transition-colors duration-300 ${currentQuestion === 0 ? "hidden" : ""
-                    }`}
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={nextQuestion}
-                  disabled={selectedOption === null}
-                  className={`bg-black text-white py-3 px-8 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 ml-auto ${selectedOption === null ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                >
-                  {isLastQuestion ? "Get Results" : "Next"}
-                </button>
+                {/* Navigation */}
+                <div className="flex justify-between">
+                  <button
+                    onClick={prevSection}
+                    disabled={currentSection === 0}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+
+                  <button
+                    onClick={nextSection}
+                    className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    {currentSection === sections.length - 1 ? "Get Quote" : "Next"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 text-center">
+                <div className="mb-6">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h2>
+                  <p className="text-gray-600 mb-6">
+                    To use our project builder and get a personalized quote, please log in to your account. This helps us provide better service and track your project requirements.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <Link
+                    href={`/login?returnUrl=${encodeURIComponent(router.asPath)}`}
+                    className="inline-block w-full bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors duration-300 font-medium"
+                  >
+                    Sign In to Continue
+                  </Link>
+
+                  <div className="text-sm text-gray-500">
+                                                            Don't have an account?{' '}
+                      < Link
+                      href={`/signup?returnUrl=${encodeURIComponent(router.asPath)}`}
+                    className="text-black hover:text-gray-800 font-medium"
+                    >
+                    Sign up here
+                  </Link>
+                </div>
+              </div>
               </div>
             )}
-          </div>
         </div>
-
-        {/* Footer */}
-        <footer className="bg-white border-t border-gray-200 py-8 mt-auto">
-          <div className="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="font-jetbrains text-xl font-bold text-black">Website14</div>
-            <ul className="flex gap-8 text-sm">
-              <li>
-                <Link href="/services" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Services
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </footer>
       </div>
+
+      <Footer />
+    </div >
     </>
   );
 } 
