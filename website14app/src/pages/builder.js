@@ -9,10 +9,11 @@ import Footer from '../components/Footer';
 export default function Builder() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const router = useRouter();
   const [currentSection, setCurrentSection] = useState(0);
   const [formData, setFormData] = useState({
-    // Lead Information
+    // User Information (collected at the end)
     name: '',
     email: '',
     phone: '',
@@ -61,40 +62,6 @@ export default function Builder() {
   });
 
   const sections = [
-    {
-      title: "Lead Information",
-      subtitle: "Let's start with your contact details",
-      fields: [
-        {
-          type: "text",
-          label: "Full Name",
-          name: "name",
-          required: true,
-          placeholder: "Enter your full name"
-        },
-        {
-          type: "email",
-          label: "Email Address",
-          name: "email",
-          required: true,
-          placeholder: "Enter your email address"
-        },
-        {
-          type: "tel",
-          label: "Phone Number",
-          name: "phone",
-          required: true,
-          placeholder: "Enter your phone number"
-        },
-        {
-          type: "text",
-          label: "Company Name",
-          name: "companyName",
-          required: false,
-          placeholder: "Enter your company name (optional)"
-        }
-      ]
-    },
     {
       title: "Business Information",
       subtitle: "Tell us about your business",
@@ -459,19 +426,51 @@ export default function Builder() {
           ]
         }
       ]
+    },
+    {
+      title: "Your Information",
+      subtitle: "Tell us how to reach you",
+      fields: [
+        {
+          type: "text",
+          label: "Full Name",
+          name: "name",
+          required: true,
+          placeholder: "Enter your full name"
+        },
+        {
+          type: "email",
+          label: "Email Address",
+          name: "email",
+          required: true,
+          placeholder: "Enter your email address"
+        },
+        {
+          type: "tel",
+          label: "Phone Number",
+          name: "phone",
+          required: true,
+          placeholder: "Enter your phone number"
+        },
+        {
+          type: "text",
+          label: "Company Name",
+          name: "companyName",
+          required: false,
+          placeholder: "Enter your company name (optional)"
+        }
+      ]
     }
   ];
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setUser(user);
-      }
+      setUser(user);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, []);
 
   const handleInputChange = (name, value) => {
     setFormData(prev => ({
@@ -493,7 +492,12 @@ export default function Builder() {
     if (currentSection < sections.length - 1) {
       setCurrentSection(currentSection + 1);
     } else {
-      submitForm();
+      // Show login prompt if user is not logged in
+      if (!user) {
+        setShowLoginPrompt(true);
+      } else {
+        submitForm();
+      }
     }
   };
 
@@ -503,33 +507,78 @@ export default function Builder() {
     }
   };
 
-  const submitForm = () => {
-    // Calculate package recommendation based on form data
-    let recommendedPackage = "static";
-    let totalPoints = 0;
+  const submitForm = async () => {
+    try {
+      // Calculate package recommendation based on form data
+      let recommendedPackage = "static";
+      let totalPoints = 0;
 
-    // Scoring logic based on form data
-    if (formData.primaryPurpose === "E-commerce - Online store with products and payments") {
-      recommendedPackage = "ecommerce";
-      totalPoints = 10;
-    } else if (formData.primaryPurpose === "Dynamic Website - Content management, blog, user accounts") {
-      recommendedPackage = "dynamic";
-      totalPoints = 6;
-    } else {
-      recommendedPackage = "static";
-      totalPoints = 3;
+      // Scoring logic based on form data
+      if (formData.primaryPurpose === "E-commerce - Online store with products and payments") {
+        recommendedPackage = "ecommerce";
+        totalPoints = 10;
+      } else if (formData.primaryPurpose === "Dynamic Website - Content management, blog, user accounts") {
+        recommendedPackage = "dynamic";
+        totalPoints = 6;
+      } else {
+        recommendedPackage = "static";
+        totalPoints = 3;
+      }
+
+      // Get user location for pricing
+      const locationResponse = await fetch('https://ipapi.co/json/');
+      const locationData = await locationResponse.json();
+
+      // Create lead data
+      const leadData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.companyName,
+        industry: formData.businessType,
+        source: "project-builder",
+        status: "new",
+        ipAddress: locationData.ip,
+        country: locationData.country_name,
+        city: locationData.city,
+        currency: locationData.currency,
+        requirements: formData,
+        recommendedPackage,
+        totalPoints,
+        createdAt: new Date(),
+        followUpDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        userId: user ? user.uid : null
+      };
+
+      // Save lead data to Firestore
+      if (user) {
+        const { db } = await import('../lib/firebase');
+        const { collection, addDoc } = await import('firebase/firestore');
+
+        try {
+          await addDoc(collection(db, 'leads'), leadData);
+          console.log('Lead saved to Firestore successfully');
+        } catch (firestoreError) {
+          console.error('Error saving lead to Firestore:', firestoreError);
+          // Continue with the flow even if Firestore save fails
+        }
+      }
+
+      // Store results in localStorage for quote generation
+      localStorage.setItem("builderResults", JSON.stringify({
+        formData,
+        recommendedPackage,
+        totalPoints,
+        leadData,
+        timestamp: new Date().toISOString()
+      }));
+
+      // Redirect to quote page
+      router.push('/quote');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('There was an error submitting your form. Please try again.');
     }
-
-    // Store results
-    localStorage.setItem("builderResults", JSON.stringify({
-      formData,
-      recommendedPackage,
-      totalPoints,
-      timestamp: new Date().toISOString()
-    }));
-
-    // Redirect to contact page
-    window.location.href = "/contact";
   };
 
   const getProgressPercentage = () => {
@@ -661,7 +710,7 @@ export default function Builder() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
-              <p className="mt-4 text-gray-600">Checking authentication...</p>
+              <p className="mt-4 text-gray-600">Loading project builder...</p>
             </div>
           </div>
 
@@ -686,7 +735,45 @@ export default function Builder() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col justify-center items-center py-8">
           <div className="w-full max-w-4xl mx-auto px-5">
-            {user ? (
+            {showLoginPrompt ? (
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 text-center">
+                <div className="mb-6">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Almost Done!</h2>
+                  <p className="text-gray-600 mb-6">
+                    Great! We've collected all your project requirements. Now we just need you to create an account or sign in to get your personalized quote and start your project.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <Link
+                    href={`/signup?returnUrl=${encodeURIComponent(router.asPath)}`}
+                    className="inline-block w-full bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors duration-300 font-medium"
+                  >
+                    Create Account & Get Quote
+                  </Link>
+
+                  <div className="text-sm text-gray-500">
+                    Already have an account?{' '}
+                    <Link
+                      href={`/login?returnUrl=${encodeURIComponent(router.asPath)}`}
+                      className="text-black hover:text-gray-800 font-medium"
+                    >
+                      Sign in here
+                    </Link>
+                  </div>
+
+                  <button
+                    onClick={() => setShowLoginPrompt(false)}
+                    className="text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    ← Go back to questionnaire
+                  </button>
+                </div>
+              </div>
+            ) : (
               <>
                 {/* Progress Bar */}
                 <div className="mb-8">
@@ -749,43 +836,12 @@ export default function Builder() {
                   </button>
                 </div>
               </>
-            ) : (
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 text-center">
-                <div className="mb-6">
-                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h2>
-                  <p className="text-gray-600 mb-6">
-                    To use our project builder and get a personalized quote, please log in to your account. This helps us provide better service and track your project requirements.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <Link
-                    href={`/login?returnUrl=${encodeURIComponent(router.asPath)}`}
-                    className="inline-block w-full bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors duration-300 font-medium"
-                  >
-                    Sign In to Continue
-                  </Link>
-
-                  <div className="text-sm text-gray-500">
-                                                            Don't have an account?{' '}
-                      < Link
-                      href={`/signup?returnUrl=${encodeURIComponent(router.asPath)}`}
-                    className="text-black hover:text-gray-800 font-medium"
-                    >
-                    Sign up here
-                  </Link>
-                </div>
-              </div>
-              </div>
             )}
+          </div>
         </div>
-      </div>
 
-      <Footer />
-    </div >
+        <Footer />
+      </div>
     </>
   );
 } 

@@ -67,6 +67,11 @@ export default function Footer() {
                             Contact
                         </Link>
                     </li>
+                    <li>
+                        <Link href="/sitemap.xml" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
+                            Sitemap
+                        </Link>
+                    </li>
                     {user ? (
                         <li className="relative">
                             <button
