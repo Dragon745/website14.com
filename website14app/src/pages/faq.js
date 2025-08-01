@@ -10,8 +10,8 @@ export default function FAQ() {
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Head>
-      
-      <body className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
+
+      <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
         {/* Header */}
         <header className="bg-white shadow-sm border-b sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -284,7 +284,7 @@ export default function FAQ() {
             </ul>
           </div>
         </footer>
-      </body>
+      </div>
     </>
   );
 } 

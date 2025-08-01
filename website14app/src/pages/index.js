@@ -11,7 +11,7 @@ export default function Home() {
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Head>
 
-      <body className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
+      <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
         <div className="max-w-6xl mx-auto px-5 flex-1 flex flex-col justify-center items-center">
           <div className="font-jetbrains text-5xl md:text-6xl font-bold text-black mb-12 text-center tracking-tight">
             Website14
@@ -64,7 +64,7 @@ export default function Home() {
             </ul>
           </div>
         </footer>
-      </body>
+      </div>
     </>
   );
 }

@@ -10,8 +10,8 @@ export default function Services() {
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Head>
-      
-      <body className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
+
+      <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
         {/* Header */}
         <header className="bg-white shadow-sm border-b sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -43,7 +43,7 @@ export default function Services() {
                 <span className="text-blue-600">That Convert</span>
               </h1>
               <p className="font-inter text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-                Get a custom-built, mobile-first website with unlimited updates for less than DIY platforms. 
+                Get a custom-built, mobile-first website with unlimited updates for less than DIY platforms.
                 <span className="font-semibold text-black">No templates. No compromises.</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
@@ -526,7 +526,7 @@ export default function Services() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="border border-gray-200 rounded-lg p-4">
                     <h3 className="font-semibold text-gray-900 mb-2">E-commerce Features</h3>
                     <div className="space-y-2 text-sm">
@@ -654,7 +654,7 @@ export default function Services() {
             </ul>
           </div>
         </footer>
-      </body>
+      </div>
     </>
   );
 } 

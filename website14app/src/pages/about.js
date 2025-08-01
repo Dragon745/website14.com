@@ -10,8 +10,8 @@ export default function About() {
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Head>
-      
-      <body className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
+
+      <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
         {/* Header */}
         <header className="bg-white shadow-sm border-b sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -90,7 +90,7 @@ export default function About() {
                 <h2 className="font-jetbrains text-3xl font-bold text-black mb-4">Our Values</h2>
                 <p className="text-lg text-gray-600">The principles that guide everything we do</p>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -103,7 +103,7 @@ export default function About() {
                     We believe in getting results fast. Your website should be live and working for your business within days, not months.
                   </p>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +115,7 @@ export default function About() {
                     Every website we build is mobile-first, SEO-optimized, and designed to convert visitors into customers.
                   </p>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +137,7 @@ export default function About() {
               <h2 className="font-jetbrains text-3xl font-bold text-black mb-4">How We Work</h2>
               <p className="text-lg text-gray-600">Simple, transparent, and effective</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div className="text-center">
                 <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">1</div>
@@ -146,7 +146,7 @@ export default function About() {
                   We discuss your needs, goals, and budget to create the perfect solution for your business.
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">2</div>
                 <h3 className="font-semibold text-lg text-gray-900 mb-2">Quick Setup</h3>
@@ -154,7 +154,7 @@ export default function About() {
                   We build your website fast, typically within 1-2 weeks, with regular updates on progress.
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">3</div>
                 <h3 className="font-semibold text-lg text-gray-900 mb-2">Launch & Optimize</h3>
@@ -162,7 +162,7 @@ export default function About() {
                   Your website goes live with SEO optimization, mobile responsiveness, and conversion optimization.
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">4</div>
                 <h3 className="font-semibold text-lg text-gray-900 mb-2">Ongoing Support</h3>
@@ -180,7 +180,7 @@ export default function About() {
                 <h2 className="font-jetbrains text-3xl font-bold text-black mb-4">Meet Our Team</h2>
                 <p className="text-lg text-gray-600">The people behind Website14</p>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div className="text-center">
                   <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
@@ -190,7 +190,7 @@ export default function About() {
                     Passionate about making web development accessible to every business. Specializes in modern, fast, and conversion-focused websites.
                   </p>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
                   <h3 className="font-semibold text-lg text-gray-900 mb-1">Development Team</h3>
@@ -199,7 +199,7 @@ export default function About() {
                     Our skilled team of developers who turn your vision into reality with clean, efficient, and scalable code.
                   </p>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4"></div>
                   <h3 className="font-semibold text-lg text-gray-900 mb-1">Support Team</h3>
@@ -263,7 +263,7 @@ export default function About() {
             </ul>
           </div>
         </footer>
-      </body>
+      </div>
     </>
   );
 } 

@@ -85,8 +85,8 @@ export default function Builder() {
           preSelectedType === "static"
             ? 1
             : preSelectedType === "dynamic"
-            ? 2
-            : 3,
+              ? 2
+              : 3,
       }]);
       setCurrentQuestion(1);
     }
@@ -204,8 +204,8 @@ export default function Builder() {
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </Head>
-      
-      <body className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
+
+      <div className="bg-gray-50 text-gray-800 font-inter min-h-screen flex flex-col">
         {/* Header */}
         <header className="bg-white shadow-sm border-b sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -257,11 +257,10 @@ export default function Builder() {
                     {questions[currentQuestion].options.map((option, index) => (
                       <button
                         key={index}
-                        className={`w-full bg-white border-2 rounded-lg p-6 text-left font-inter text-lg font-medium text-gray-800 cursor-pointer transition-all duration-300 hover:border-gray-500 hover:bg-gray-50 ${
-                          selectedOption === index
+                        className={`w-full bg-white border-2 rounded-lg p-6 text-left font-inter text-lg font-medium text-gray-800 cursor-pointer transition-all duration-300 hover:border-gray-500 hover:bg-gray-50 ${selectedOption === index
                             ? "border-black bg-gray-100"
                             : "border-gray-300"
-                        }`}
+                          }`}
                         onClick={() => selectOption(index)}
                       >
                         {option.text}
@@ -277,18 +276,16 @@ export default function Builder() {
               <div className="flex justify-between">
                 <button
                   onClick={prevQuestion}
-                  className={`bg-white border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-500 transition-colors duration-300 ${
-                    currentQuestion === 0 ? "hidden" : ""
-                  }`}
+                  className={`bg-white border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-500 transition-colors duration-300 ${currentQuestion === 0 ? "hidden" : ""
+                    }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={nextQuestion}
                   disabled={selectedOption === null}
-                  className={`bg-black text-white py-3 px-8 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 ml-auto ${
-                    selectedOption === null ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`bg-black text-white py-3 px-8 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 ml-auto ${selectedOption === null ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                 >
                   {isLastQuestion ? "Get Results" : "Next"}
                 </button>
@@ -325,7 +322,7 @@ export default function Builder() {
             </ul>
           </div>
         </footer>
-      </body>
+      </div>
     </>
   );
 } 
