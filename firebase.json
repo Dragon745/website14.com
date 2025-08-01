@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "/website14app/out",
+    "public": "website14app/out",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   }
 }
