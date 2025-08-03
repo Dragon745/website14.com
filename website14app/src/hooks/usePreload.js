@@ -40,10 +40,28 @@ export const usePreload = () => {
         }
     };
 
+    // Preload specific blog posts when blog page is visited
+    const preloadBlogPosts = async (blogPosts) => {
+        if (!blogPosts || blogPosts.length === 0) return;
+
+        try {
+            // Preload first 3 blog posts for better UX
+            const postsToPreload = blogPosts.slice(0, 3);
+            await Promise.all(
+                postsToPreload.map(post =>
+                    preloadPage(`/blog/${post.slug}`)
+                )
+            );
+            console.log('📝 Blog posts preloaded successfully');
+        } catch (error) {
+            console.warn('⚠️ Some blog posts failed to preload:', error);
+        }
+    };
+
     useEffect(() => {
         // Preload all pages after initial render
         preloadAllPages();
     }, [preloadAllPages]);
 
-    return { preloadPage, preloadAllPages };
+    return { preloadPage, preloadAllPages, preloadBlogPosts };
 }; 

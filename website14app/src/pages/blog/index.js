@@ -4,36 +4,60 @@ import { db } from '../../lib/firebase';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import Link from 'next/link';
+import Head from 'next/head';
+import { usePreload } from '../../hooks/usePreload';
 
-export default function Blog() {
-    const [posts, setPosts] = useState([]);
-    const [loading, setLoading] = useState(true);
+// This function runs at build time to get all blog posts
+export async function getStaticProps() {
+    try {
+        const blogQuery = query(
+            collection(db, 'blog'),
+            where('status', '==', 'published'),
+            orderBy('publishedAt', 'desc')
+        );
+        const blogSnapshot = await getDocs(blogQuery);
+        const postsData = blogSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                publishedAt: data.publishedAt?.toDate?.()?.toISOString() || data.publishedAt,
+                createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+                updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt
+            };
+        });
+
+        return {
+            props: {
+                posts: postsData
+            }
+        };
+    } catch (error) {
+        console.error('Error fetching blog posts:', error);
+        return {
+            props: {
+                posts: []
+            }
+        };
+    }
+}
+
+export default function Blog({ posts }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTag, setSelectedTag] = useState('');
+    const { preloadBlogPosts } = usePreload();
 
+    // Preload blog posts when component mounts
     useEffect(() => {
-        loadBlogPosts();
-    }, []);
-
-    const loadBlogPosts = async () => {
-        try {
-            const blogQuery = query(
-                collection(db, 'blog'),
-                where('status', '==', 'published'),
-                orderBy('publishedAt', 'desc')
-            );
-            const blogSnapshot = await getDocs(blogQuery);
-            const postsData = blogSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setPosts(postsData);
-        } catch (error) {
-            console.error('Error loading blog posts:', error);
-        } finally {
-            setLoading(false);
+        if (posts && posts.length > 0) {
+            preloadBlogPosts(posts);
         }
-    };
+    }, [posts, preloadBlogPosts]);
 
     const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('en-US', {
+        // Handle both ISO strings and Date objects
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        return dateObj.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -63,25 +87,18 @@ export default function Blog() {
         return text.substring(0, maxLength) + '...';
     };
 
-    if (loading) {
-        return (
-            <>
-                <Header />
-                <div className="min-h-screen bg-gray-50">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                        <div className="text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                            <p className="mt-4 text-gray-600">Loading blog posts...</p>
-                        </div>
-                    </div>
-                </div>
-                <Footer />
-            </>
-        );
-    }
-
     return (
         <>
+            <Head>
+                <title>Blog | Website14</title>
+                <meta name="description" content="Insights, tips, and updates from our web development team" />
+                <meta name="keywords" content="web development, blog, tips, insights, website14" />
+                <meta property="og:title" content="Blog | Website14" />
+                <meta property="og:description" content="Insights, tips, and updates from our web development team" />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://website14.com/blog" />
+                <link rel="canonical" href="https://website14.com/blog" />
+            </Head>
             <Header />
             <div className="min-h-screen bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -141,7 +158,7 @@ export default function Blog() {
                                         </div>
 
                                         <h2 className="text-xl font-bold text-gray-900 mb-3">
-                                            <Link href={`/blog/${post.slug}`} className="hover:text-blue-600 transition-colors">
+                                            <Link href={`/blog/${post.slug}`} prefetch={true} className="hover:text-blue-600 transition-colors">
                                                 {post.title}
                                             </Link>
                                         </h2>
@@ -155,6 +172,7 @@ export default function Blog() {
                                         <div className="flex justify-between items-center">
                                             <Link
                                                 href={`/blog/${post.slug}`}
+                                                prefetch={true}
                                                 className="text-blue-600 hover:text-blue-700 font-medium"
                                             >
                                                 Read more →

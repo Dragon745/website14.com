@@ -356,7 +356,7 @@ export default function BlogPost({ post, relatedPosts }) {
                 <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     {/* Breadcrumb */}
                     <nav className="mb-8">
-                        <Link href="/blog" className="text-blue-600 hover:text-blue-800">
+                        <Link href="/blog" prefetch={true} className="text-blue-600 hover:text-blue-800">
                             ← Back to Blog
                         </Link>
                     </nav>
@@ -391,7 +391,7 @@ export default function BlogPost({ post, relatedPosts }) {
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Posts</h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {relatedPosts.map(relatedPost => (
-                                    <Link key={relatedPost.id} href={`/blog/${relatedPost.slug}`} className="block group">
+                                    <Link key={relatedPost.id} href={`/blog/${relatedPost.slug}`} prefetch={true} className="block group">
                                         <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                                             <div className="p-6">
                                                 <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
