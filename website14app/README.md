@@ -65,7 +65,7 @@ The website includes a complete blog system with the following features:
 - **Firestore Storage**: All posts stored in `blog/` collection
 - **Public Access**: Blog posts are publicly readable
 - **Admin Only**: Only admins can create/edit posts
-- **Static Generation**: Blog posts converted to static HTML files at build time
+- **Static Generation**: Blog posts generated as static pages using `getStaticPaths` and `getStaticProps`
 - **Dynamic Sitemap**: Blog posts automatically included in sitemap.xml
 - **Build Integration**: Blog generation and sitemap generation integrated into build process
 
@@ -81,12 +81,6 @@ npm run add-sample-blog
 
 ```bash
 npm run generate-sitemap
-```
-
-#### Generating Blog Pages
-
-```bash
-npm run generate-blog
 ```
 
 #### Building
@@ -128,6 +122,5 @@ npm run deploy
 2. **Edit Content**: Write content with markdown support
 3. **Set SEO**: Add meta title, description, and keywords
 4. **Publish**: Change status to "published"
-5. **Build**: Run `npm run build` to generate static files
-6. **Generate Blog**: Run `npm run generate-blog` to create static HTML for blog posts
-7. **Deploy**: Deploy to Firebase Hosting
+5. **Build**: Run `npm run build` to generate static files (includes blog posts)
+6. **Deploy**: Deploy to Firebase Hosting

@@ -1,0 +1,251 @@
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import Link from 'next/link';
+import Head from 'next/head';
+
+// This function runs at build time to generate all possible blog post paths
+export async function getStaticPaths() {
+    try {
+        // Fetch all published blog posts from Firestore
+        const blogQuery = query(
+            collection(db, 'blog'),
+            where('status', '==', 'published'),
+            orderBy('publishedAt', 'desc')
+        );
+        const blogSnapshot = await getDocs(blogQuery);
+
+        // Generate paths for each blog post
+        const paths = blogSnapshot.docs.map(doc => ({
+            params: { slug: doc.data().slug }
+        }));
+
+        return {
+            paths,
+            fallback: false // Return 404 for any paths not generated
+        };
+    } catch (error) {
+        console.error('Error generating static paths:', error);
+        return {
+            paths: [],
+            fallback: false
+        };
+    }
+}
+
+// This function runs at build time to get data for each blog post
+export async function getStaticProps({ params }) {
+    try {
+        // Fetch the specific blog post by slug
+        const blogQuery = query(
+            collection(db, 'blog'),
+            where('slug', '==', params.slug),
+            where('status', '==', 'published')
+        );
+        const blogSnapshot = await getDocs(blogQuery);
+
+        if (blogSnapshot.empty) {
+            return {
+                notFound: true
+            };
+        }
+
+        const rawPostData = blogSnapshot.docs[0].data();
+
+        // Convert Firestore timestamps to serializable dates
+        const postData = {
+            id: blogSnapshot.docs[0].id,
+            ...rawPostData,
+            publishedAt: rawPostData.publishedAt?.toDate?.()?.toISOString() || rawPostData.publishedAt,
+            createdAt: rawPostData.createdAt?.toDate?.()?.toISOString() || rawPostData.createdAt,
+            updatedAt: rawPostData.updatedAt?.toDate?.()?.toISOString() || rawPostData.updatedAt
+        };
+
+        // Fetch related posts
+        const relatedQuery = query(
+            collection(db, 'blog'),
+            where('status', '==', 'published'),
+            orderBy('publishedAt', 'desc'),
+            limit(3)
+        );
+        const relatedSnapshot = await getDocs(relatedQuery);
+        const relatedPosts = relatedSnapshot.docs
+            .map(doc => {
+                const rawData = doc.data();
+                return {
+                    id: doc.id,
+                    ...rawData,
+                    publishedAt: rawData.publishedAt?.toDate?.()?.toISOString() || rawData.publishedAt,
+                    createdAt: rawData.createdAt?.toDate?.()?.toISOString() || rawData.createdAt,
+                    updatedAt: rawData.updatedAt?.toDate?.()?.toISOString() || rawData.updatedAt
+                };
+            })
+            .filter(p => p.id !== postData.id);
+
+        return {
+            props: {
+                post: postData,
+                relatedPosts
+            }
+        };
+    } catch (error) {
+        console.error('Error fetching blog post:', error);
+        return {
+            notFound: true
+        };
+    }
+}
+
+export default function BlogPost({ post, relatedPosts }) {
+    const formatDate = (date) => {
+        // Handle both ISO strings and Date objects
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        return dateObj.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const formatReadingTime = (content) => {
+        const wordsPerMinute = 200;
+        const wordCount = content.split(' ').length;
+        const readingTime = Math.ceil(wordCount / wordsPerMinute);
+        return readingTime;
+    };
+
+    const renderContent = (content) => {
+        // Simple markdown-like rendering
+        return content
+            .split('\n')
+            .map((line, index) => {
+                if (line.startsWith('# ')) {
+                    return <h1 key={index} className="text-3xl font-bold text-gray-900 mt-8 mb-4">{line.substring(2)}</h1>;
+                }
+                if (line.startsWith('## ')) {
+                    return <h2 key={index} className="text-2xl font-bold text-gray-900 mt-6 mb-3">{line.substring(3)}</h2>;
+                }
+                if (line.startsWith('### ')) {
+                    return <h3 key={index} className="text-xl font-bold text-gray-900 mt-4 mb-2">{line.substring(4)}</h3>;
+                }
+                if (line.startsWith('**') && line.endsWith('**')) {
+                    return <p key={index} className="text-gray-700 mb-4"><strong>{line.substring(2, line.length - 2)}</strong></p>;
+                }
+                if (line.startsWith('*') && line.endsWith('*')) {
+                    return <p key={index} className="text-gray-700 mb-4 italic">{line.substring(1, line.length - 1)}</p>;
+                }
+                if (line.trim() === '') {
+                    return <br key={index} />;
+                }
+                return <p key={index} className="text-gray-700 mb-4">{line}</p>;
+            });
+    };
+
+    if (!post) {
+        return (
+            <>
+                <Header />
+                <div className="min-h-screen bg-gray-50">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                        <div className="text-center">
+                            <h1 className="text-3xl font-bold text-gray-900 mb-4">Blog Post Not Found</h1>
+                            <p className="text-gray-600 mb-8">The blog post you're looking for doesn't exist.</p>
+                            <Link href="/blog" className="text-blue-600 hover:text-blue-800">
+                                ← Back to Blog
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+                <Footer />
+            </>
+        );
+    }
+
+    return (
+        <>
+            <Head>
+                <title>{post.seo?.metaTitle || post.title} | Website14</title>
+                <meta name="description" content={post.seo?.metaDescription || post.excerpt} />
+                <meta name="keywords" content={post.seo?.keywords || post.tags?.join(', ')} />
+                <meta property="og:title" content={post.seo?.metaTitle || post.title} />
+                <meta property="og:description" content={post.seo?.metaDescription || post.excerpt} />
+                <meta property="og:type" content="article" />
+                <meta property="og:url" content={`https://website14.com/blog/${post.slug}`} />
+                <meta property="article:published_time" content={post.publishedAt} />
+                <meta property="article:author" content="Website14 Team" />
+                {post.tags?.map(tag => (
+                    <meta key={tag} property="article:tag" content={tag} />
+                ))}
+                <link rel="canonical" href={`https://website14.com/blog/${post.slug}`} />
+            </Head>
+
+            <Header />
+            <div className="min-h-screen bg-gray-50">
+                <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                    {/* Breadcrumb */}
+                    <nav className="mb-8">
+                        <Link href="/blog" className="text-blue-600 hover:text-blue-800">
+                            ← Back to Blog
+                        </Link>
+                    </nav>
+
+                    {/* Article Header */}
+                    <header className="mb-8">
+                        <h1 className="text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
+                        <div className="flex items-center text-gray-600 mb-4">
+                            <span>{formatDate(post.publishedAt)}</span>
+                            <span className="mx-2">•</span>
+                            <span>{formatReadingTime(post.content)} min read</span>
+                        </div>
+                        {post.tags && post.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {post.tags.map(tag => (
+                                    <span key={tag} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </header>
+
+                    {/* Article Content */}
+                    <div className="prose prose-lg max-w-none">
+                        {renderContent(post.content)}
+                    </div>
+
+                    {/* Related Posts */}
+                    {relatedPosts.length > 0 && (
+                        <section className="mt-12 pt-8 border-t border-gray-200">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Posts</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {relatedPosts.map(relatedPost => (
+                                    <Link key={relatedPost.id} href={`/blog/${relatedPost.slug}`} className="block group">
+                                        <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                                            <div className="p-6">
+                                                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
+                                                    {relatedPost.title}
+                                                </h3>
+                                                <p className="text-gray-600 text-sm mb-3">
+                                                    {relatedPost.excerpt}
+                                                </p>
+                                                <div className="flex items-center text-gray-500 text-sm">
+                                                    <span>{formatDate(relatedPost.publishedAt)}</span>
+                                                    <span className="mx-2">•</span>
+                                                    <span>{formatReadingTime(relatedPost.content)} min read</span>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </Link>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </article>
+            </div>
+            <Footer />
+        </>
+    );
+} 
