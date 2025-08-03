@@ -1,9 +1,16 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useLocation } from '../hooks/useLocation';
+import { usePricing } from '../hooks/usePricing';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function Home() {
+  // Use the location hook for future use
+  const { location: userLocation, isLoading: locationLoading } = useLocation();
+
+  // Use the pricing hook to pre-load pricing data
+  const { pricingData, isLoading: pricingLoading } = usePricing(userLocation?.currency);
   return (
     <>
       <Head>
@@ -26,7 +33,7 @@ export default function Home() {
               What can we help you build today?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link href="/builder" prefetch={true}>
+              <Link href="/order" prefetch={true}>
                 <button className="w-full bg-white border-2 border-gray-300 rounded-lg p-6 text-left font-inter text-lg font-medium text-gray-800 cursor-pointer transition-all duration-300 hover:border-gray-500 hover:bg-gray-50 hover:-translate-y-1 hover:shadow-lg active:translate-y-0">
                   I need a simple website
                 </button>

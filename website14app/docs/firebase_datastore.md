@@ -341,6 +341,291 @@
 - Stores user preferences and profile data
 - Enables role-based access control
 
+### pricing Collection
+
+**Purpose**: Stores dynamic pricing data for different currencies and packages, managed through the admin dashboard.
+
+**Collection Path**: `pricing/{currency}`
+
+**Fields**:
+
+**Package Setup Fees**:
+
+- `staticSetup` (number) - One-time setup fee for static websites
+- `dynamicSetup` (number) - One-time setup fee for dynamic websites
+- `ecommerceSetup` (number) - One-time setup fee for e-commerce websites
+
+**Package Monthly Fees**:
+
+- `staticMonthly` (number) - Monthly hosting fee for static websites
+- `dynamicMonthly` (number) - Monthly hosting fee for dynamic websites
+- `ecommerceMonthly` (number) - Monthly hosting fee for e-commerce websites
+
+**Add-on Pricing**:
+
+- `extraPage` (number) - Cost per additional page
+- `extraProduct` (number) - Cost per additional product (e-commerce)
+- `paymentGateway` (number) - Cost per additional payment gateway
+- `emailAccount` (number) - Cost per email account
+
+**Additional Features**:
+
+- `contactForms` (number) - Cost for contact forms feature
+- `newsletterSignup` (number) - Cost for newsletter signup feature
+- `socialMediaIntegration` (number) - Cost for social media integration
+- `googleMapsIntegration` (number) - Cost for Google Maps integration
+- `bookingAppointmentSystem` (number) - Cost for booking/appointment system
+- `liveChat` (number) - Cost for live chat feature
+- `multiLanguageSupport` (number) - Cost for multi-language support
+- `searchFunctionality` (number) - Cost for search functionality
+- `imageGallery` (number) - Cost for image gallery feature
+- `videoIntegration` (number) - Cost for video integration
+
+**Discount Percentages**:
+
+- `yearlyDiscount` (number) - Discount percentage for yearly billing
+- `twoYearDiscount` (number) - Discount percentage for 2-year billing
+- `threeYearDiscount` (number) - Discount percentage for 3-year billing
+
+**System Fields**:
+
+- `currency` (string) - Currency code (USD, EUR, GBP, etc.)
+- `lastUpdated` (timestamp) - Last update timestamp
+
+**Supported Currencies**:
+
+- `USD` - US Dollar
+- `EUR` - Euro
+- `GBP` - British Pound
+- `CAD` - Canadian Dollar
+- `INR` - Indian Rupee
+- `SAR` - Saudi Riyal
+- `AED` - UAE Dirham
+- `QAR` - Qatari Riyal
+- `KWD` - Kuwaiti Dinar
+- `BHD` - Bahraini Dinar
+- `OMR` - Omani Rial
+
+**Example Document (USD)**:
+
+```json
+{
+  "staticSetup": 59,
+  "staticMonthly": 5,
+  "dynamicSetup": 120,
+  "dynamicMonthly": 7.2,
+  "ecommerceSetup": 180,
+  "ecommerceMonthly": 11,
+  "extraPage": 3,
+  "extraProduct": 0.2,
+  "paymentGateway": 5,
+  "emailAccount": 2.4,
+  "contactForms": 2,
+  "newsletterSignup": 2.5,
+  "socialMediaIntegration": 4,
+  "googleMapsIntegration": 3,
+  "bookingAppointmentSystem": 10,
+  "liveChat": 5,
+  "multiLanguageSupport": 8,
+  "searchFunctionality": 2.5,
+  "imageGallery": 2,
+  "videoIntegration": 4,
+  "yearlyDiscount": 10,
+  "twoYearDiscount": 15,
+  "threeYearDiscount": 20,
+  "currency": "USD",
+  "lastUpdated": "2024-01-15T10:30:00Z"
+}
+```
+
+**Usage**:
+
+- Managed through admin dashboard pricing tab
+- Used by services page for dynamic pricing display
+- Used by order page for real-time pricing calculations
+- Used by project builder for quote generation
+- Supports multi-currency pricing
+- Enables dynamic pricing updates without code changes
+
+### blog Collection
+
+**Purpose**: Stores blog posts for the website's content marketing and SEO purposes.
+
+**Collection Path**: `blog/{postId}`
+
+**Fields**:
+
+**Content Information**:
+
+- `title` (string) - Blog post title
+- `slug` (string) - URL-friendly slug for the post
+- `excerpt` (string) - Short description/summary of the post
+- `content` (string) - Full blog post content (markdown supported)
+- `tags` (array) - Array of tags for categorization
+- `status` (string) - Post status (draft/published)
+
+**SEO and Metadata**:
+
+- `metaDescription` (string) - Meta description for SEO
+- `metaKeywords` (string) - Meta keywords for SEO
+- `featuredImage` (string) - URL to featured image
+- `author` (string) - Author name
+
+**Timestamps**:
+
+- `createdAt` (timestamp) - When the post was created
+- `updatedAt` (timestamp) - Last modification timestamp
+- `publishedAt` (timestamp) - When the post was published
+
+**Example Document**:
+
+```json
+{
+  "title": "10 Essential Features Every Business Website Needs",
+  "slug": "10-essential-features-business-website",
+  "excerpt": "Discover the must-have features that will make your business website stand out and convert visitors into customers.",
+  "content": "# 10 Essential Features Every Business Website Needs\n\nIn today's digital world...",
+  "tags": ["web-design", "business", "features", "conversion"],
+  "status": "published",
+  "metaDescription": "Learn about the 10 essential features every business website needs to succeed online and convert visitors into customers.",
+  "metaKeywords": "business website, web design, features, conversion, online business",
+  "featuredImage": "https://website14.com/images/essential-features.jpg",
+  "author": "Website14 Team",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z",
+  "publishedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**Usage**:
+
+- Managed through admin dashboard blog tab
+- Used for content marketing and SEO
+- Supports static generation for better performance
+- Enables blog post creation and editing
+- Provides search and filtering functionality
+
+### projects Collection
+
+**Purpose**: Stores project information for client projects and project management.
+
+**Collection Path**: `projects/{projectId}`
+
+**Fields**:
+
+**Project Information**:
+
+- `title` (string) - Project title
+- `status` (string) - Project status (active/completed/on-hold)
+- `clientId` (string) - Reference to client user
+- `orderId` (string) - Reference to associated order
+
+**Project Details**:
+
+- `industry` (string) - Industry type (restaurant/retail/healthcare/etc.)
+- `requirements` (string) - Project requirements and specifications
+- `timeline` (string) - Project timeline
+- `budget` (string) - Project budget range
+
+**Quote Information**:
+
+- `quote` (object) - Associated quote data:
+  - `finalPrice` (number) - Final project price
+  - `currency` (string) - Currency code
+  - `package` (string) - Package type
+
+**Timestamps**:
+
+- `timestamp` (timestamp) - Project creation timestamp
+- `lastUpdate` (timestamp) - Last update timestamp
+
+**Example Document**:
+
+```json
+{
+  "title": "Restaurant Website with Online Ordering",
+  "status": "active",
+  "clientId": "user123456789",
+  "orderId": "order_abc123",
+  "industry": "restaurant",
+  "requirements": "Modern restaurant website with online ordering system, menu management, and payment processing",
+  "timeline": "3-4 weeks",
+  "budget": "Premium",
+  "quote": {
+    "finalPrice": 1200,
+    "currency": "USD",
+    "package": "dynamic"
+  },
+  "timestamp": "2024-01-15T10:30:00Z",
+  "lastUpdate": "2024-01-15T10:30:00Z"
+}
+```
+
+**Usage**:
+
+- Used for project management and tracking
+- Referenced in admin dashboard for project oversight
+- Used in client portal for project status
+- Enables project lifecycle management
+
+## Planned Collections (Future Implementation)
+
+### orders Collection
+
+**Purpose**: Will store order information for the new order flow.
+
+**Collection Path**: `orders/{orderId}`
+
+**Planned Fields**:
+
+- `userId` (string) - Firebase Auth user ID
+- `orderNumber` (string) - Unique order number
+- `status` (string) - Order status (pending/paid/processing/completed/cancelled)
+- `services` (object) - Selected services and packages
+- `billing` (object) - Billing information and totals
+- `project` (object) - Project details and requirements
+- `payment` (object) - Payment method and status
+- `createdAt` (timestamp) - Order creation timestamp
+- `updatedAt` (timestamp) - Last update timestamp
+
+### payments Collection
+
+**Purpose**: Will store payment records for orders.
+
+**Collection Path**: `payments/{paymentId}`
+
+**Planned Fields**:
+
+- `orderId` (string) - Reference to associated order
+- `userId` (string) - Firebase Auth user ID
+- `amount` (number) - Payment amount
+- `currency` (string) - Currency code
+- `method` (string) - Payment method (paypal/manual/bank-transfer/cash/check)
+- `status` (string) - Payment status (pending/completed/failed/cancelled)
+- `transactionId` (string) - External transaction ID
+- `createdAt` (timestamp) - Payment creation timestamp
+- `completedAt` (timestamp) - Payment completion timestamp
+- `notes` (string) - Additional payment notes
+
+### invoices Collection
+
+**Purpose**: Will store invoice information for billing.
+
+**Collection Path**: `invoices/{invoiceId}`
+
+**Planned Fields**:
+
+- `clientId` (string) - Reference to client
+- `amount` (number) - Invoice amount
+- `status` (string) - Invoice status
+- `date` (timestamp) - Invoice date
+- `paymentMethod` (string) - Payment method
+- `dueDate` (timestamp) - Payment due date
+- `items` (array) - Invoice line items
+- `billingType` (string) - Billing type (setup/monthly/addon)
+- `planType` (string) - Plan type (static/dynamic/ecommerce)
+- `addons` (object) - Additional services
+
 ## Security Rules
 
 **Access Control**:
@@ -349,6 +634,9 @@
 - **quotes**: Users can read their own quotes, admins can read/write all
 - **tickets**: Users can read/create their own tickets, admins can read/write all
 - **users**: Users can read/write their own data, admins can read all
+- **pricing**: Read-only for all authenticated users, write access for admins only
+- **blog**: Read access for all users, write access for admins only
+- **projects**: Users can read their own projects, admins can read/write all
 
 **Authentication Requirements**:
 
@@ -364,14 +652,20 @@
 - `users` ←→ `quotes` (One-to-Many)
 - `users` ←→ `leads` (One-to-Many)
 - `users` ←→ `tickets` (One-to-Many)
+- `users` ←→ `projects` (One-to-Many)
 - `leads` ←→ `quotes` (One-to-One)
+- `orders` ←→ `payments` (One-to-Many) [Future]
+- `orders` ←→ `projects` (One-to-One) [Future]
 
 **Query Patterns**:
 
 - Get user's quotes: `quotes?userId={uid}`
 - Get user's leads: `leads?userId={uid}`
 - Get user's tickets: `tickets?userId={uid}`
+- Get user's projects: `projects?clientId={uid}`
 - Get leads by status: `leads?status=new`
+- Get pricing by currency: `pricing/{currency}`
+- Get published blog posts: `blog?status=published`
 
 ## Indexing Strategy
 
@@ -381,6 +675,8 @@
 - `leads` collection: `userId` + `createdAt` (composite)
 - `tickets` collection: `userId` + `createdAt` (composite)
 - `leads` collection: `status` + `createdAt` (composite)
+- `blog` collection: `status` + `publishedAt` (composite)
+- `projects` collection: `clientId` + `timestamp` (composite)
 
 **Performance Considerations**:
 
@@ -388,3 +684,4 @@
 - Composite indexes support complex filtering and sorting
 - Timestamp-based queries for chronological ordering
 - User-specific queries for data isolation
+- Blog posts use static generation for better performance

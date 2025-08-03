@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { recaptchaConfig } from '../../recaptcha.config.js';
 
@@ -18,6 +18,9 @@ export default function ProjectBuilderChat() {
     const [selectedOptions, setSelectedOptions] = useState([]);
     const [customPages, setCustomPages] = useState([]);
     const [showCustomPageInput, setShowCustomPageInput] = useState(false);
+    const [pricingData, setPricingData] = useState(null);
+    const [userLocation, setUserLocation] = useState(null);
+    const [isLoadingPricing, setIsLoadingPricing] = useState(true);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const initialQuestionAddedRef = useRef(false);
@@ -500,6 +503,52 @@ export default function ProjectBuilderChat() {
         };
 
         collectBackgroundData();
+    }, []);
+
+    // Detect user location and load pricing
+    useEffect(() => {
+        const detectLocationAndLoadPricing = async () => {
+            try {
+                // Detect user location
+                const response = await fetch('https://ipapi.co/json/');
+                const locationData = await response.json();
+
+                setUserLocation({
+                    country: locationData.country_name,
+                    city: locationData.city,
+                    currency: locationData.currency,
+                    ip: locationData.ip
+                });
+
+                // Load pricing data from Firestore
+                const pricingDoc = await getDoc(doc(db, 'pricing', locationData.currency));
+
+                if (pricingDoc.exists()) {
+                    const data = pricingDoc.data();
+                    console.log(`Loaded pricing for ${locationData.currency}:`, data);
+                    setPricingData(data);
+                } else {
+                    console.log(`No pricing data found for ${locationData.currency}, falling back to USD`);
+                    // Fallback to USD if currency not found
+                    const usdPricingDoc = await getDoc(doc(db, 'pricing', 'USD'));
+                    if (usdPricingDoc.exists()) {
+                        const usdData = usdPricingDoc.data();
+                        console.log('Loaded USD pricing:', usdData);
+                        setPricingData(usdData);
+                    } else {
+                        console.log('No USD pricing found, using default');
+                        setPricingData(null);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading pricing:', error);
+                setPricingData(null);
+            } finally {
+                setIsLoadingPricing(false);
+            }
+        };
+
+        detectLocationAndLoadPricing();
     }, []);
 
     const scrollToBottom = () => {

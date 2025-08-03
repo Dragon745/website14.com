@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { auth } from '../lib/firebase';
+import { useLocation } from '../hooks/useLocation';
+import { usePricing } from '../hooks/usePricing';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -10,8 +12,11 @@ export default function Quote() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [quoteData, setQuoteData] = useState(null);
-    const [pricingData, setPricingData] = useState(null);
     const router = useRouter();
+
+    // Pre-load location and pricing data
+    const { location: userLocation } = useLocation();
+    const { pricingData } = usePricing(userLocation?.currency);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {

@@ -1,15 +1,25 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { db } from '../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { useLocation } from '../hooks/useLocation';
+import { usePricing } from '../hooks/usePricing';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function Services() {
-  const [pricingData, setPricingData] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use the location hook
+  const { location: userLocation, isLoading: locationLoading, error: locationError } = useLocation();
+
+  // Use the pricing hook
+  const { pricingData, isLoading: pricingLoading, error: pricingError } = usePricing(userLocation?.currency);
+
+  // Debug: Log when pricing hook is called
+  useEffect(() => {
+    console.log('Services page - usePricing called with currency:', userLocation?.currency);
+  }, [userLocation?.currency]);
+
+  // Combined loading state
+  const isLoading = locationLoading || pricingLoading;
 
   // Default USD pricing for SEO and fallback
   const defaultPricing = {
@@ -54,12 +64,18 @@ export default function Services() {
     OMR: 'OMR '
   };
 
-  // Detect user location and load pricing
+  // Debug logging for pricing
   useEffect(() => {
     const detectLocationAndLoadPricing = async () => {
       try {
-        // Detect user location
-        const response = await fetch('https://ipapi.co/json/');
+        // Detect user location with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+        const response = await fetch('https://ipapi.co/json/', {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
         const locationData = await response.json();
 
         setUserLocation({
@@ -75,6 +91,11 @@ export default function Services() {
         if (pricingDoc.exists()) {
           const data = pricingDoc.data();
           console.log(`Loaded pricing for ${locationData.currency}:`, data);
+          console.log('Discount values:', {
+            yearly: data.yearlyDiscount,
+            twoYear: data.twoYearDiscount,
+            threeYear: data.threeYearDiscount
+          });
           setPricingData(data);
         } else {
           console.log(`No pricing data found for ${locationData.currency}, falling back to USD`);
@@ -83,22 +104,139 @@ export default function Services() {
           if (usdPricingDoc.exists()) {
             const usdData = usdPricingDoc.data();
             console.log('Loaded USD pricing:', usdData);
+            console.log('USD Discount values:', {
+              yearly: usdData.yearlyDiscount,
+              twoYear: usdData.twoYearDiscount,
+              threeYear: usdData.threeYearDiscount
+            });
             setPricingData(usdData);
+            // Also update user location to USD for consistency
+            setUserLocation(prev => ({
+              ...prev,
+              currency: 'USD'
+            }));
           } else {
             console.log('No USD pricing found, using default');
-            setPricingData(defaultPricing);
+            // Convert default pricing to flat structure for consistency
+            setPricingData({
+              staticSetup: defaultPricing.static.setup,
+              staticMonthly: defaultPricing.static.monthly,
+              dynamicSetup: defaultPricing.dynamic.setup,
+              dynamicMonthly: defaultPricing.dynamic.monthly,
+              ecommerceSetup: defaultPricing.ecommerce.setup,
+              ecommerceMonthly: defaultPricing.ecommerce.monthly,
+              extraPage: defaultPricing.addons.extraPage,
+              extraProduct: defaultPricing.addons.extraProduct,
+              extraPaymentGateway: defaultPricing.addons.extraPaymentGateway,
+              emailAccount: defaultPricing.addons.emailAccount,
+              contactForms: defaultPricing.addons.contactForms,
+              newsletterSignup: defaultPricing.addons.newsletterSignup,
+              socialMediaIntegration: defaultPricing.addons.socialMediaIntegration,
+              googleMapsIntegration: defaultPricing.addons.googleMapsIntegration,
+              bookingAppointmentSystem: defaultPricing.addons.bookingAppointmentSystem,
+              liveChat: defaultPricing.addons.liveChat,
+              multiLanguageSupport: defaultPricing.addons.multiLanguageSupport,
+              searchFunctionality: defaultPricing.addons.searchFunctionality,
+              imageGallery: defaultPricing.addons.imageGallery,
+              videoIntegration: defaultPricing.addons.videoIntegration,
+              yearlyDiscount: defaultPricing.discounts.yearly,
+              twoYearDiscount: defaultPricing.discounts.twoYear,
+              threeYearDiscount: defaultPricing.discounts.threeYear
+            });
+            // Also update user location to USD for consistency
+            setUserLocation(prev => ({
+              ...prev,
+              currency: 'USD'
+            }));
           }
         }
       } catch (error) {
         console.error('Error loading pricing:', error);
-        setPricingData(defaultPricing);
+        // Set default USD location when API fails
+        setUserLocation({
+          country: 'United States',
+          city: 'Unknown',
+          currency: 'USD',
+          ip: '0.0.0.0'
+        });
+
+        // Try to load USD pricing from database first
+        try {
+          const usdPricingDoc = await getDoc(doc(db, 'pricing', 'USD'));
+          if (usdPricingDoc.exists()) {
+            const usdData = usdPricingDoc.data();
+            console.log('Loaded USD pricing from database after API failure:', usdData);
+            setPricingData(usdData);
+          } else {
+            console.log('No USD pricing found in database, using default');
+            // Convert default pricing to flat structure for consistency
+            setPricingData({
+              staticSetup: defaultPricing.static.setup,
+              staticMonthly: defaultPricing.static.monthly,
+              dynamicSetup: defaultPricing.dynamic.setup,
+              dynamicMonthly: defaultPricing.dynamic.monthly,
+              ecommerceSetup: defaultPricing.ecommerce.setup,
+              ecommerceMonthly: defaultPricing.ecommerce.monthly,
+              extraPage: defaultPricing.addons.extraPage,
+              extraProduct: defaultPricing.addons.extraProduct,
+              extraPaymentGateway: defaultPricing.addons.extraPaymentGateway,
+              emailAccount: defaultPricing.addons.emailAccount,
+              contactForms: defaultPricing.addons.contactForms,
+              newsletterSignup: defaultPricing.addons.newsletterSignup,
+              socialMediaIntegration: defaultPricing.addons.socialMediaIntegration,
+              googleMapsIntegration: defaultPricing.addons.googleMapsIntegration,
+              bookingAppointmentSystem: defaultPricing.addons.bookingAppointmentSystem,
+              liveChat: defaultPricing.addons.liveChat,
+              multiLanguageSupport: defaultPricing.addons.multiLanguageSupport,
+              searchFunctionality: defaultPricing.addons.searchFunctionality,
+              imageGallery: defaultPricing.addons.imageGallery,
+              videoIntegration: defaultPricing.addons.videoIntegration,
+              yearlyDiscount: defaultPricing.discounts.yearly,
+              twoYearDiscount: defaultPricing.discounts.twoYear,
+              threeYearDiscount: defaultPricing.discounts.threeYear
+            });
+          }
+        } catch (dbError) {
+          console.error('Error loading USD pricing from database:', dbError);
+          // Final fallback to hardcoded default pricing
+          setPricingData({
+            staticSetup: defaultPricing.static.setup,
+            staticMonthly: defaultPricing.static.monthly,
+            dynamicSetup: defaultPricing.dynamic.setup,
+            dynamicMonthly: defaultPricing.dynamic.monthly,
+            ecommerceSetup: defaultPricing.ecommerce.setup,
+            ecommerceMonthly: defaultPricing.ecommerce.monthly,
+            extraPage: defaultPricing.addons.extraPage,
+            extraProduct: defaultPricing.addons.extraProduct,
+            extraPaymentGateway: defaultPricing.addons.extraPaymentGateway,
+            emailAccount: defaultPricing.addons.emailAccount,
+            contactForms: defaultPricing.addons.contactForms,
+            newsletterSignup: defaultPricing.addons.newsletterSignup,
+            socialMediaIntegration: defaultPricing.addons.socialMediaIntegration,
+            googleMapsIntegration: defaultPricing.addons.googleMapsIntegration,
+            bookingAppointmentSystem: defaultPricing.addons.bookingAppointmentSystem,
+            liveChat: defaultPricing.addons.liveChat,
+            multiLanguageSupport: defaultPricing.addons.multiLanguageSupport,
+            searchFunctionality: defaultPricing.addons.searchFunctionality,
+            imageGallery: defaultPricing.addons.imageGallery,
+            videoIntegration: defaultPricing.addons.videoIntegration,
+            yearlyDiscount: defaultPricing.discounts.yearly,
+            twoYearDiscount: defaultPricing.discounts.twoYear,
+            threeYearDiscount: defaultPricing.discounts.threeYear
+          });
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
-    detectLocationAndLoadPricing();
-  }, []);
+    console.log('Services page - Pricing state:', {
+      pricingData,
+      pricingLoading,
+      pricingError: pricingError?.message,
+      userLocation
+    });
+  }, [pricingData, pricingLoading, pricingError, userLocation]);
 
   // Format price with currency symbol
   const formatPrice = (price, currency = 'USD') => {
@@ -108,61 +246,60 @@ export default function Services() {
 
   // Get current pricing (either from Firestore or default)
   const getCurrentPricing = () => {
-    if (pricingData && userLocation) {
-      // Map flat Firestore data to nested structure
-      const mappedPricing = {
-        static: {
-          setup: pricingData.staticSetup || defaultPricing.static.setup,
-          monthly: pricingData.staticMonthly || defaultPricing.static.monthly
-        },
-        dynamic: {
-          setup: pricingData.dynamicSetup || defaultPricing.dynamic.setup,
-          monthly: pricingData.dynamicMonthly || defaultPricing.dynamic.monthly
-        },
-        ecommerce: {
-          setup: pricingData.ecommerceSetup || defaultPricing.ecommerce.setup,
-          monthly: pricingData.ecommerceMonthly || defaultPricing.ecommerce.monthly
-        },
-        addons: {
-          extraPage: pricingData.extraPage || defaultPricing.addons.extraPage,
-          extraProduct: pricingData.extraProduct || defaultPricing.addons.extraProduct,
-          extraPaymentGateway: pricingData.paymentGateway || defaultPricing.addons.extraPaymentGateway,
-          emailAccount: pricingData.emailAccount || defaultPricing.addons.emailAccount,
-          contactForms: pricingData.contactForms || defaultPricing.addons.contactForms,
-          newsletterSignup: pricingData.newsletterSignup || defaultPricing.addons.newsletterSignup,
-          socialMediaIntegration: pricingData.socialMediaIntegration || defaultPricing.addons.socialMediaIntegration,
-          googleMapsIntegration: pricingData.googleMapsIntegration || defaultPricing.addons.googleMapsIntegration,
-          bookingAppointmentSystem: pricingData.bookingAppointmentSystem || defaultPricing.addons.bookingAppointmentSystem,
-          liveChat: pricingData.liveChat || defaultPricing.addons.liveChat,
-          multiLanguageSupport: pricingData.multiLanguageSupport || defaultPricing.addons.multiLanguageSupport,
-          searchFunctionality: pricingData.searchFunctionality || defaultPricing.addons.searchFunctionality,
-          imageGallery: pricingData.imageGallery || defaultPricing.addons.imageGallery,
-          videoIntegration: pricingData.videoIntegration || defaultPricing.addons.videoIntegration
-        },
-        discounts: {
-          yearly: pricingData.yearlyDiscount || 0,
-          twoYear: pricingData.twoYearDiscount || 0,
-          threeYear: pricingData.threeYearDiscount || 0
-        },
-        currency: userLocation.currency
-      };
+    console.log('getCurrentPricing called with:', { pricingData, userLocation });
 
-      console.log('Mapped pricing data:', mappedPricing);
-      return mappedPricing;
-    }
-    console.log('Using default pricing (no Firestore data)');
-    return {
-      ...defaultPricing,
-      discounts: {
-        yearly: pricingData?.yearlyDiscount || defaultPricing.discounts.yearly,
-        twoYear: pricingData?.twoYearDiscount || defaultPricing.discounts.twoYear,
-        threeYear: pricingData?.threeYearDiscount || defaultPricing.discounts.threeYear
+    // Always use default pricing as fallback, even if pricingData is null
+    const basePricing = {
+      static: {
+        setup: pricingData?.staticSetup !== undefined ? pricingData.staticSetup : defaultPricing.static.setup,
+        monthly: pricingData?.staticMonthly !== undefined ? pricingData.staticMonthly : defaultPricing.static.monthly
       },
-      currency: 'USD'
+      dynamic: {
+        setup: pricingData?.dynamicSetup !== undefined ? pricingData.dynamicSetup : defaultPricing.dynamic.setup,
+        monthly: pricingData?.dynamicMonthly !== undefined ? pricingData.dynamicMonthly : defaultPricing.dynamic.monthly
+      },
+      ecommerce: {
+        setup: pricingData?.ecommerceSetup !== undefined ? pricingData.ecommerceSetup : defaultPricing.ecommerce.setup,
+        monthly: pricingData?.ecommerceMonthly !== undefined ? pricingData.ecommerceMonthly : defaultPricing.ecommerce.monthly
+      },
+      addons: {
+        extraPage: pricingData?.extraPage !== undefined ? pricingData.extraPage : defaultPricing.addons.extraPage,
+        extraProduct: pricingData?.extraProduct !== undefined ? pricingData.extraProduct : defaultPricing.addons.extraProduct,
+        extraPaymentGateway: pricingData?.paymentGateway !== undefined ? pricingData.paymentGateway : defaultPricing.addons.extraPaymentGateway,
+        emailAccount: pricingData?.emailAccount !== undefined ? pricingData.emailAccount : defaultPricing.addons.emailAccount,
+        contactForms: pricingData?.contactForms !== undefined ? pricingData.contactForms : defaultPricing.addons.contactForms,
+        newsletterSignup: pricingData?.newsletterSignup !== undefined ? pricingData.newsletterSignup : defaultPricing.addons.newsletterSignup,
+        socialMediaIntegration: pricingData?.socialMediaIntegration !== undefined ? pricingData.socialMediaIntegration : defaultPricing.addons.socialMediaIntegration,
+        googleMapsIntegration: pricingData?.googleMapsIntegration !== undefined ? pricingData.googleMapsIntegration : defaultPricing.addons.googleMapsIntegration,
+        bookingAppointmentSystem: pricingData?.bookingAppointmentSystem !== undefined ? pricingData.bookingAppointmentSystem : defaultPricing.addons.bookingAppointmentSystem,
+        liveChat: pricingData?.liveChat !== undefined ? pricingData.liveChat : defaultPricing.addons.liveChat,
+        multiLanguageSupport: pricingData?.multiLanguageSupport !== undefined ? pricingData.multiLanguageSupport : defaultPricing.addons.multiLanguageSupport,
+        searchFunctionality: pricingData?.searchFunctionality !== undefined ? pricingData.searchFunctionality : defaultPricing.addons.searchFunctionality,
+        imageGallery: pricingData?.imageGallery !== undefined ? pricingData.imageGallery : defaultPricing.addons.imageGallery,
+        videoIntegration: pricingData?.videoIntegration !== undefined ? pricingData.videoIntegration : defaultPricing.addons.videoIntegration
+      },
+      discounts: {
+        yearly: pricingData?.yearlyDiscount !== undefined ? pricingData.yearlyDiscount : defaultPricing.discounts.yearly,
+        twoYear: pricingData?.twoYearDiscount !== undefined ? pricingData.twoYearDiscount : defaultPricing.discounts.twoYear,
+        threeYear: pricingData?.threeYearDiscount !== undefined ? pricingData.threeYearDiscount : defaultPricing.discounts.threeYear
+      },
+      currency: userLocation?.currency || 'USD'
     };
+
+    console.log('Final pricing data:', basePricing);
+    console.log('Final discount values:', basePricing.discounts);
+    return basePricing;
   };
 
   const currentPricing = getCurrentPricing();
+
+  // Debug logging
+  useEffect(() => {
+    if (pricingData) {
+      console.log('Pricing data updated:', pricingData);
+      console.log('Current pricing calculated:', currentPricing);
+    }
+  }, [pricingData, currentPricing]);
 
   return (
     <>
@@ -178,6 +315,7 @@ export default function Services() {
 
         {/* Main Content */}
         <div className="flex-1">
+
           {/* Hero Section with Social Proof */}
           <div className="max-w-6xl mx-auto px-5 py-16">
             <div className="text-center mb-12">
@@ -195,6 +333,17 @@ export default function Services() {
                 Get a custom-built, mobile-first website with unlimited updates for less than DIY platforms.
                 <span className="font-semibold text-black">No templates. No compromises.</span>
               </p>
+              {isLoading && pricingData && (
+                <div className="mb-4 text-sm text-blue-600">
+                  <span className="inline-flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Updating prices from database...
+                  </span>
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
                 <div className="flex items-center text-sm text-gray-600">
                   <span className="text-green-500 mr-2">✓</span>
@@ -209,7 +358,7 @@ export default function Services() {
                   Unlimited updates included
                 </div>
               </div>
-              <Link href="/builder">
+              <Link href="/order">
                 <button className="bg-black text-white py-4 px-8 rounded-lg font-medium hover:bg-gray-800 transition-all duration-300 text-lg">
                   Get Your Free Quote Now
                 </button>
@@ -285,7 +434,7 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/builder">
+                <Link href="/order">
                   <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
                     Start Your Website
                   </button>
@@ -356,7 +505,7 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/builder">
+                <Link href="/order">
                   <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
                     Start Your Website
                   </button>
@@ -425,7 +574,7 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/builder">
+                <Link href="/order">
                   <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
                     Start Your Store
                   </button>
@@ -1102,13 +1251,13 @@ export default function Services() {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/builder">
+                  <Link href="/order">
                     <button className="bg-white text-blue-600 py-4 px-8 rounded-lg font-medium hover:bg-gray-100 transition-all duration-300 text-lg">
                       Get Your Free Quote
                     </button>
                   </Link>
                   <Link href="/contact">
-                    <button className="border-2 border-white text-white py-4 px-8 rounded-lg font-medium hover:bg-white hover:text-blue-600 transition-all duration-300 text-lg">
+                    <button className="border-2 border-white text-white py-4 px-8 rounded-lg font-medium hover:bg-gray-100 transition-all duration-300 text-lg">
                       Talk to Our Team
                     </button>
                   </Link>

@@ -1,9 +1,14 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useLocation } from '../hooks/useLocation';
+import { usePricing } from '../hooks/usePricing';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function FAQ() {
+  // Pre-load location and pricing data
+  const { location: userLocation } = useLocation();
+  const { pricingData } = usePricing(userLocation?.currency);
   return (
     <>
       <Head>

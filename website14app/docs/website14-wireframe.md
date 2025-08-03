@@ -194,16 +194,19 @@
 
 ## 🔓 Public Pages (Static Only)
 
-| Page            | Route       | Features                                                                                 |
-| --------------- | ----------- | ---------------------------------------------------------------------------------------- |
-| Home            | `/`         | Competitive advantages, unlimited updates, better than DIY                               |
-| About           | `/about`    | Agency history, team, values                                                             |
-| Services        | `/services` | Dynamic pricing by location, fallback to USD when JS disabled                            |
-| Blog            | `/blog`     | Static HTML generated at build-time from Firestore                                       |
-| Contact         | `/contact`  | Lead capture form with reCAPTCHA, consultation booking, cold outreach                    |
-| Project Builder | `/builder`  | Comprehensive questionnaire with lead capture, location tracking, package recommendation |
-| Sign Up         | `/signup`   | Firebase Auth registration with reCAPTCHA                                                |
-| Login           | `/login`    | Firebase Auth login with reCAPTCHA                                                       |
+| Page            | Route            | Features                                                                                 |
+| --------------- | ---------------- | ---------------------------------------------------------------------------------------- |
+| Home            | `/`              | Competitive advantages, unlimited updates, better than DIY                               |
+| About           | `/about`         | Agency history, team, values                                                             |
+| Services        | `/services`      | Dynamic pricing by location, fallback to USD when JS disabled                            |
+| Blog            | `/blog`          | Static HTML generated at build-time from Firestore                                       |
+| Contact         | `/contact`       | Lead capture form with reCAPTCHA, consultation booking, cold outreach                    |
+| Project Builder | `/builder`       | Comprehensive questionnaire with lead capture, location tracking, package recommendation |
+| Order           | `/order`         | Service selection with dynamic pricing and billing cycles                                |
+| Order Confirm   | `/order/confirm` | Order review, project details, payment method selection                                  |
+| Order Success   | `/order/success` | Payment confirmation, order details, next steps                                          |
+| Sign Up         | `/signup`        | Firebase Auth registration with reCAPTCHA                                                |
+| Login           | `/login`         | Firebase Auth login with reCAPTCHA                                                       |
 
 ⚠️ SEO Note: Ensure HTML contains all essential content at build time. Avoid relying on JS for important info.
 ⚠️ **JavaScript Fallback**: All public pages must function with JS disabled. Services page shows USD prices by default, updates dynamically when JS loads.
@@ -372,9 +375,18 @@ leads/
     source: "cold-call" | "website-form" | "project-builder" | "referral" | "social"
     status: "new" | "contacted" | "qualified" | "proposal" | "closed" | "lost"
 
+orders/
+  orderId/
+    userId, orderNumber, status, createdAt, updatedAt
+    services: { packages[], addons[] }
+    billing: { setupTotal, monthlyTotal, billingCycle, currency }
+    project: { businessName, requirements, timeline, budget }
+    payment: { method, status, transactionId, amount, currency }
+    status: "pending" | "paid" | "processing" | "completed" | "cancelled"
+
 projects/
   projectId/
-    clientId, title, status, industry, phases[], files[], feedback[], timeline[]
+    orderId, clientId, title, status, industry, phases[], files[], feedback[], timeline[]
     industry: "restaurant" | "retail" | "healthcare" | "real-estate" | "professional-services" | "ecommerce" | "startup" | "other"
     competitiveAdvantages: {
       unlimitedUpdates: true,
@@ -402,6 +414,13 @@ invoices/
     billingType: "setup" | "monthly" | "addon"
     planType: "static" | "dynamic" | "ecommerce"
     addons: { extraPages, extraProducts, extraPaymentGateways, emailAccounts }
+
+payments/
+  paymentId/
+    orderId, userId, amount, currency, method, status, transactionId
+    method: "paypal" | "manual" | "bank-transfer" | "cash" | "check"
+    status: "pending" | "completed" | "failed" | "cancelled"
+    createdAt, completedAt, notes
 
 blog/
   postId/
@@ -1130,6 +1149,44 @@ const paymentSecurity = {
 };
 ```
 
+### 🔐 Order & Payment Flow
+
+**Step 1: Order Review (`/order`)**
+
+- User selects services and sees total
+- Shows setup fees + monthly fees with billing cycle options
+- User clicks "Place Order" button
+
+**Step 2: Authentication (`/login` or `/signup`)**
+
+- If user not logged in, redirect to login/signup
+- New users can register during checkout
+- Existing users login to continue
+- After authentication, redirect back to order confirmation
+
+**Step 3: Order Confirmation (`/order/confirm`)**
+
+- Show complete order breakdown with user details
+- Display selected services with prices
+- Show billing cycle chosen
+- Ask for project details (business name, requirements)
+- Show final total (setup + monthly fees)
+- User clicks "Proceed to Payment"
+
+**Step 4: Payment Processing**
+
+- **PayPal Integration** for instant payments
+- **Manual Payment** options (bank transfer, cash, check)
+- **Payment verification** and confirmation
+- **Order creation** in database
+
+**Step 5: Success Page (`/order/success`)**
+
+- Payment confirmation
+- Order number and details
+- Next steps and contact information
+- Redirect to client portal
+
 ### 💰 Payment Methods
 
 **PayPal Integration:**
@@ -1190,50 +1247,228 @@ const paypalWebhooks = {
 
 ### 🛒 Checkout Flow
 
-**Step 1: Quote Review**
+**Step 1: Order Review**
 
 ```jsx
-const QuoteReview = ({ quote, onProceed }) => (
-  <div className="quote-review">
-    <h3>Review Your Quote</h3>
-    <div className="quote-breakdown">
-      <div className="package-details">
-        <h4>{quote.packageName}</h4>
-        <p>{quote.description}</p>
+const OrderReview = ({ order, onProceed }) => {
+  const { user } = useAuth();
+
+  if (!user) {
+    return (
+      <div className="auth-required">
+        <h3>Sign In to Continue</h3>
+        <p>Please sign in or create an account to complete your order.</p>
+        <div className="auth-options">
+          <Link href="/login?redirect=/order/confirm" className="btn-primary">
+            Sign In
+          </Link>
+          <Link
+            href="/signup?redirect=/order/confirm"
+            className="btn-secondary"
+          >
+            Create Account
+          </Link>
+        </div>
       </div>
-      <div className="pricing">
-        <div className="setup-fee">
-          <span>Setup Fee:</span>
-          <span>{formatCurrency(quote.setupFee, quote.currency)}</span>
+    );
+  }
+
+  return (
+    <div className="order-review">
+      <h3>Review Your Order</h3>
+      <div className="user-info">
+        <h4>Account Information</h4>
+        <p>Name: {user.displayName || user.email}</p>
+        <p>Email: {user.email}</p>
+      </div>
+      <div className="order-breakdown">
+        <div className="services-selected">
+          <h4>Selected Services</h4>
+          {order.services.packages.map((service) => (
+            <div key={service.id} className="service-item">
+              <span>{service.name}</span>
+              <span>{formatCurrency(service.setupPrice, order.currency)}</span>
+            </div>
+          ))}
+          {order.services.addons.map((addon) => (
+            <div key={addon.id} className="addon-item">
+              <span>{addon.name}</span>
+              <span>{formatCurrency(addon.price, order.currency)}</span>
+            </div>
+          ))}
         </div>
-        <div className="monthly-fee">
-          <span>Monthly Hosting:</span>
-          <span>{formatCurrency(quote.monthlyFee, quote.currency)}</span>
-        </div>
-        {quote.addons.length > 0 && (
-          <div className="addons">
-            {quote.addons.map((addon) => (
-              <div key={addon.id} className="addon">
-                <span>{addon.name}</span>
-                <span>{formatCurrency(addon.cost, quote.currency)}</span>
-              </div>
-            ))}
+        <div className="billing-summary">
+          <h4>Billing Summary</h4>
+          <div className="setup-total">
+            <span>Setup Total:</span>
+            <span>
+              {formatCurrency(order.billing.setupTotal, order.currency)}
+            </span>
           </div>
-        )}
-        <div className="total">
-          <span>Total Setup:</span>
-          <span>{formatCurrency(quote.totalSetup, quote.currency)}</span>
+          <div className="monthly-total">
+            <span>Monthly Total:</span>
+            <span>
+              {formatCurrency(order.billing.monthlyTotal, order.currency)}
+            </span>
+          </div>
+          <div className="billing-cycle">
+            <span>Billing Cycle:</span>
+            <span>{order.billing.billingCycle}</span>
+          </div>
         </div>
       </div>
+      <button onClick={onProceed} className="proceed-btn">
+        Proceed to Payment
+      </button>
     </div>
-    <button onClick={onProceed} className="proceed-btn">
-      Proceed to Payment
-    </button>
-  </div>
-);
+  );
+};
 ```
 
-**Step 2: Payment Method Selection**
+**Step 2: Project Details Form**
+
+```jsx
+const ProjectDetailsForm = ({ order, onUpdate, onProceed }) => {
+  const [projectDetails, setProjectDetails] = useState({
+    businessName: "",
+    industry: "",
+    requirements: "",
+    timeline: "standard",
+    budget: "standard",
+    specialFeatures: [],
+    contactPhone: "",
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onUpdate({ ...order, project: projectDetails });
+    onProceed();
+  };
+
+  return (
+    <div className="project-details-form">
+      <h3>Project Details</h3>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="businessName">Business Name *</label>
+          <input
+            type="text"
+            id="businessName"
+            value={projectDetails.businessName}
+            onChange={(e) =>
+              setProjectDetails((prev) => ({
+                ...prev,
+                businessName: e.target.value,
+              }))
+            }
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="industry">Industry</label>
+          <select
+            id="industry"
+            value={projectDetails.industry}
+            onChange={(e) =>
+              setProjectDetails((prev) => ({
+                ...prev,
+                industry: e.target.value,
+              }))
+            }
+          >
+            <option value="">Select Industry</option>
+            <option value="restaurant">Restaurant & Food Service</option>
+            <option value="retail">Retail & E-commerce</option>
+            <option value="healthcare">Healthcare & Medical</option>
+            <option value="real-estate">Real Estate</option>
+            <option value="professional-services">Professional Services</option>
+            <option value="startup">Startup & Technology</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="requirements">Project Requirements *</label>
+          <textarea
+            id="requirements"
+            value={projectDetails.requirements}
+            onChange={(e) =>
+              setProjectDetails((prev) => ({
+                ...prev,
+                requirements: e.target.value,
+              }))
+            }
+            placeholder="Describe your website needs, goals, and any specific features you want..."
+            rows={4}
+            required
+          />
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="timeline">Timeline</label>
+            <select
+              id="timeline"
+              value={projectDetails.timeline}
+              onChange={(e) =>
+                setProjectDetails((prev) => ({
+                  ...prev,
+                  timeline: e.target.value,
+                }))
+              }
+            >
+              <option value="urgent">Urgent (1-2 weeks)</option>
+              <option value="standard">Standard (3-4 weeks)</option>
+              <option value="flexible">Flexible (1-2 months)</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="budget">Budget Range</label>
+            <select
+              id="budget"
+              value={projectDetails.budget}
+              onChange={(e) =>
+                setProjectDetails((prev) => ({
+                  ...prev,
+                  budget: e.target.value,
+                }))
+              }
+            >
+              <option value="basic">Basic</option>
+              <option value="standard">Standard</option>
+              <option value="premium">Premium</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="contactPhone">Contact Phone</label>
+          <input
+            type="tel"
+            id="contactPhone"
+            value={projectDetails.contactPhone}
+            onChange={(e) =>
+              setProjectDetails((prev) => ({
+                ...prev,
+                contactPhone: e.target.value,
+              }))
+            }
+            placeholder="+1 (555) 123-4567"
+          />
+        </div>
+
+        <button type="submit" className="proceed-btn">
+          Continue to Payment
+        </button>
+      </form>
+    </div>
+  );
+};
+```
+
+**Step 3: Payment Method Selection**
 
 ```jsx
 const PaymentMethodSelection = ({ onSelect }) => {
@@ -1347,7 +1582,7 @@ const PayPalCheckout = ({ quote, onSuccess, onCancel }) => {
 **Step 4: Manual Payment Instructions**
 
 ```jsx
-const ManualPayment = ({ quote, onComplete }) => {
+const ManualPayment = ({ order, onComplete }) => {
   const [paymentDetails, setPaymentDetails] = useState({
     method: "",
     reference: "",
@@ -1360,10 +1595,10 @@ const ManualPayment = ({ quote, onComplete }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          quoteId: quote.id,
+          orderId: order.id,
           paymentDetails,
-          amount: quote.totalSetup,
-          currency: quote.currency,
+          amount: order.billing.setupTotal,
+          currency: order.currency,
         }),
       });
 
@@ -1378,7 +1613,9 @@ const ManualPayment = ({ quote, onComplete }) => {
       <h3>Manual Payment</h3>
       <div className="payment-instructions">
         <h4>Payment Instructions:</h4>
-        <p>Amount: {formatCurrency(quote.totalSetup, quote.currency)}</p>
+        <p>
+          Amount: {formatCurrency(order.billing.setupTotal, order.currency)}
+        </p>
         <p>Please contact us to arrange payment:</p>
         <ul>
           <li>Email: payments@website14.com</li>
@@ -1431,6 +1668,147 @@ const ManualPayment = ({ quote, onComplete }) => {
         <button onClick={handleSubmit} className="submit-payment">
           Submit Payment Details
         </button>
+      </div>
+    </div>
+  );
+};
+```
+
+**Step 5: Order Success Page**
+
+```jsx
+const OrderSuccess = ({ order }) => {
+  return (
+    <div className="order-success">
+      <div className="success-header">
+        <div className="success-icon">✓</div>
+        <h2>Order Confirmed!</h2>
+        <p>Thank you for choosing Website14. Your order has been received.</p>
+      </div>
+
+      <div className="order-details">
+        <h3>Order Details</h3>
+        <div className="order-info">
+          <div className="info-row">
+            <span>Order Number:</span>
+            <span>{order.orderNumber}</span>
+          </div>
+          <div className="info-row">
+            <span>Order Date:</span>
+            <span>{formatDate(order.createdAt)}</span>
+          </div>
+          <div className="info-row">
+            <span>Total Amount:</span>
+            <span>
+              {formatCurrency(order.billing.setupTotal, order.currency)}
+            </span>
+          </div>
+          <div className="info-row">
+            <span>Payment Status:</span>
+            <span className={`status ${order.payment.status}`}>
+              {order.payment.status}
+            </span>
+          </div>
+        </div>
+
+        <div className="project-info">
+          <h4>Project Information</h4>
+          <p>
+            <strong>Business:</strong> {order.project.businessName}
+          </p>
+          <p>
+            <strong>Industry:</strong> {order.project.industry}
+          </p>
+          <p>
+            <strong>Timeline:</strong> {order.project.timeline}
+          </p>
+        </div>
+
+        <div className="services-summary">
+          <h4>Services Ordered</h4>
+          {order.services.packages.map((service) => (
+            <div key={service.id} className="service-item">
+              <span>{service.name}</span>
+              <span>{formatCurrency(service.setupPrice, order.currency)}</span>
+            </div>
+          ))}
+          {order.services.addons.map((addon) => (
+            <div key={addon.id} className="addon-item">
+              <span>{addon.name}</span>
+              <span>{formatCurrency(addon.price, order.currency)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="next-steps">
+        <h3>What Happens Next?</h3>
+        <div className="steps-timeline">
+          <div className="step">
+            <div className="step-number">1</div>
+            <div className="step-content">
+              <h4>Project Setup</h4>
+              <p>
+                We'll contact you within 24 hours to discuss your project
+                requirements.
+              </p>
+            </div>
+          </div>
+          <div className="step">
+            <div className="step-number">2</div>
+            <div className="step-content">
+              <h4>Design Phase</h4>
+              <p>
+                Our team will create wireframes and mockups for your approval.
+              </p>
+            </div>
+          </div>
+          <div className="step">
+            <div className="step-number">3</div>
+            <div className="step-content">
+              <h4>Development</h4>
+              <p>We'll build your website with unlimited revisions included.</p>
+            </div>
+          </div>
+          <div className="step">
+            <div className="step-number">4</div>
+            <div className="step-content">
+              <h4>Launch & Support</h4>
+              <p>
+                Your website goes live with ongoing support and unlimited
+                updates.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="contact-info">
+        <h3>Need Help?</h3>
+        <p>Our team is here to help you every step of the way.</p>
+        <div className="contact-methods">
+          <div className="contact-method">
+            <i className="icon-email"></i>
+            <span>support@website14.com</span>
+          </div>
+          <div className="contact-method">
+            <i className="icon-phone"></i>
+            <span>+1-XXX-XXX-XXXX</span>
+          </div>
+          <div className="contact-method">
+            <i className="icon-chat"></i>
+            <span>Live Chat Available</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="action-buttons">
+        <Link href="/client" className="btn-primary">
+          Go to Client Portal
+        </Link>
+        <Link href="/" className="btn-secondary">
+          Back to Home
+        </Link>
       </div>
     </div>
   );
