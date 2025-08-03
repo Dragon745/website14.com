@@ -28,7 +28,8 @@ export const usePreload = () => {
             '/contact',
             '/login',
             '/signup',
-            '/builder'
+            '/builder',
+            '/blog'
         ];
 
         try {

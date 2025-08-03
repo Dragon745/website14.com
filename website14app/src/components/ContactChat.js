@@ -262,7 +262,7 @@ export default function ContactChat() {
 
     const submitToFirestore = async (completeUserData) => {
         try {
-                            addMessage("Thank you! I'm submitting your information to our team...");
+            addMessage("Thank you! I'm submitting your information to our team...");
 
             // Get reCAPTCHA token
             let recaptchaToken = null;
@@ -279,6 +279,9 @@ export default function ContactChat() {
                 setIsProcessing(false);
                 return;
             }
+
+            // Note: reCAPTCHA verification is handled client-side for static site
+            // The token is included in the data for server-side verification if needed
 
             // Get current authenticated user
             const currentUser = auth.currentUser;

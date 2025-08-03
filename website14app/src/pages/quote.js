@@ -61,8 +61,30 @@ export default function Quote() {
                     updatedAt: new Date()
                 };
 
-                await addDoc(collection(db, 'leads'), updatedLeadData);
+                // Save to leads collection
+                const leadRef = await addDoc(collection(db, 'leads'), updatedLeadData);
                 console.log('Lead saved to Firestore successfully');
+
+                // Save quote data to quotes collection
+                const calculatedQuote = calculateQuote();
+                if (calculatedQuote) {
+                    const quoteData = {
+                        userId: user.uid,
+                        leadId: leadRef.id,
+                        formData: results.formData,
+                        recommendedPackage: results.recommendedPackage,
+                        totalPoints: results.totalPoints,
+                        quote: {
+                            ...calculatedQuote,
+                            currency: results.leadData?.currency || 'USD',
+                            createdAt: new Date()
+                        },
+                        createdAt: new Date()
+                    };
+
+                    await addDoc(collection(db, 'quotes'), quoteData);
+                    console.log('Quote data saved to Firestore successfully');
+                }
 
                 // Update localStorage with user ID
                 const updatedResults = {
@@ -72,7 +94,7 @@ export default function Quote() {
                 localStorage.setItem('builderResults', JSON.stringify(updatedResults));
                 setQuoteData(updatedResults);
             } catch (error) {
-                console.error('Error saving lead to Firestore:', error);
+                console.error('Error saving data to Firestore:', error);
             }
         };
 

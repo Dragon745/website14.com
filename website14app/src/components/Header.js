@@ -54,6 +54,7 @@ export default function Header() {
 
                     <div className="flex items-center space-x-8">
                         <Link href="/services" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">Services</Link>
+                        <Link href="/blog" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">Blog</Link>
                         <Link href="/about" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">About</Link>
                         <Link href="/faq" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
                         <Link href="/contact" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">Contact</Link>

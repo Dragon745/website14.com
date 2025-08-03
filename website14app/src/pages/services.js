@@ -1,9 +1,169 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { db } from '../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function Services() {
+  const [pricingData, setPricingData] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Default USD pricing for SEO and fallback
+  const defaultPricing = {
+    static: { setup: 59, monthly: 5 },
+    dynamic: { setup: 120, monthly: 7.2 },
+    ecommerce: { setup: 180, monthly: 11 },
+    addons: {
+      extraPage: 3,
+      extraProduct: 0.2,
+      extraPaymentGateway: 5,
+      emailAccount: 2.4,
+      contactForms: 2,
+      newsletterSignup: 2.5,
+      socialMediaIntegration: 4,
+      googleMapsIntegration: 3,
+      bookingAppointmentSystem: 10,
+      liveChat: 5,
+      multiLanguageSupport: 8,
+      searchFunctionality: 2.5,
+      imageGallery: 2,
+      videoIntegration: 4
+    },
+    discounts: {
+      yearly: 10,
+      twoYear: 15,
+      threeYear: 20
+    }
+  };
+
+  // Currency symbols
+  const currencySymbols = {
+    USD: '$',
+    INR: '₹',
+    CAD: 'C$',
+    EUR: '€',
+    GBP: '£',
+    SAR: 'SAR ',
+    AED: 'AED ',
+    QAR: 'QAR ',
+    KWD: 'KWD ',
+    BHD: 'BHD ',
+    OMR: 'OMR '
+  };
+
+  // Detect user location and load pricing
+  useEffect(() => {
+    const detectLocationAndLoadPricing = async () => {
+      try {
+        // Detect user location
+        const response = await fetch('https://ipapi.co/json/');
+        const locationData = await response.json();
+
+        setUserLocation({
+          country: locationData.country_name,
+          city: locationData.city,
+          currency: locationData.currency,
+          ip: locationData.ip
+        });
+
+        // Load pricing data from Firestore
+        const pricingDoc = await getDoc(doc(db, 'pricing', locationData.currency));
+
+        if (pricingDoc.exists()) {
+          const data = pricingDoc.data();
+          console.log(`Loaded pricing for ${locationData.currency}:`, data);
+          setPricingData(data);
+        } else {
+          console.log(`No pricing data found for ${locationData.currency}, falling back to USD`);
+          // Fallback to USD if currency not found
+          const usdPricingDoc = await getDoc(doc(db, 'pricing', 'USD'));
+          if (usdPricingDoc.exists()) {
+            const usdData = usdPricingDoc.data();
+            console.log('Loaded USD pricing:', usdData);
+            setPricingData(usdData);
+          } else {
+            console.log('No USD pricing found, using default');
+            setPricingData(defaultPricing);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading pricing:', error);
+        setPricingData(defaultPricing);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    detectLocationAndLoadPricing();
+  }, []);
+
+  // Format price with currency symbol
+  const formatPrice = (price, currency = 'USD') => {
+    const symbol = currencySymbols[currency] || '$';
+    return `${symbol}${price}`;
+  };
+
+  // Get current pricing (either from Firestore or default)
+  const getCurrentPricing = () => {
+    if (pricingData && userLocation) {
+      // Map flat Firestore data to nested structure
+      const mappedPricing = {
+        static: {
+          setup: pricingData.staticSetup || defaultPricing.static.setup,
+          monthly: pricingData.staticMonthly || defaultPricing.static.monthly
+        },
+        dynamic: {
+          setup: pricingData.dynamicSetup || defaultPricing.dynamic.setup,
+          monthly: pricingData.dynamicMonthly || defaultPricing.dynamic.monthly
+        },
+        ecommerce: {
+          setup: pricingData.ecommerceSetup || defaultPricing.ecommerce.setup,
+          monthly: pricingData.ecommerceMonthly || defaultPricing.ecommerce.monthly
+        },
+        addons: {
+          extraPage: pricingData.extraPage || defaultPricing.addons.extraPage,
+          extraProduct: pricingData.extraProduct || defaultPricing.addons.extraProduct,
+          extraPaymentGateway: pricingData.paymentGateway || defaultPricing.addons.extraPaymentGateway,
+          emailAccount: pricingData.emailAccount || defaultPricing.addons.emailAccount,
+          contactForms: pricingData.contactForms || defaultPricing.addons.contactForms,
+          newsletterSignup: pricingData.newsletterSignup || defaultPricing.addons.newsletterSignup,
+          socialMediaIntegration: pricingData.socialMediaIntegration || defaultPricing.addons.socialMediaIntegration,
+          googleMapsIntegration: pricingData.googleMapsIntegration || defaultPricing.addons.googleMapsIntegration,
+          bookingAppointmentSystem: pricingData.bookingAppointmentSystem || defaultPricing.addons.bookingAppointmentSystem,
+          liveChat: pricingData.liveChat || defaultPricing.addons.liveChat,
+          multiLanguageSupport: pricingData.multiLanguageSupport || defaultPricing.addons.multiLanguageSupport,
+          searchFunctionality: pricingData.searchFunctionality || defaultPricing.addons.searchFunctionality,
+          imageGallery: pricingData.imageGallery || defaultPricing.addons.imageGallery,
+          videoIntegration: pricingData.videoIntegration || defaultPricing.addons.videoIntegration
+        },
+        discounts: {
+          yearly: pricingData.yearlyDiscount || 0,
+          twoYear: pricingData.twoYearDiscount || 0,
+          threeYear: pricingData.threeYearDiscount || 0
+        },
+        currency: userLocation.currency
+      };
+
+      console.log('Mapped pricing data:', mappedPricing);
+      return mappedPricing;
+    }
+    console.log('Using default pricing (no Firestore data)');
+    return {
+      ...defaultPricing,
+      discounts: {
+        yearly: pricingData?.yearlyDiscount || defaultPricing.discounts.yearly,
+        twoYear: pricingData?.twoYearDiscount || defaultPricing.discounts.twoYear,
+        threeYear: pricingData?.threeYearDiscount || defaultPricing.discounts.threeYear
+      },
+      currency: 'USD'
+    };
+  };
+
+  const currentPricing = getCurrentPricing();
+
   return (
     <>
       <Head>
@@ -78,7 +238,7 @@ export default function Services() {
               </div>
             </div>
 
-            {/* Services Grid with Enhanced CTAs */}
+            {/* Services Grid with Dynamic Pricing */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
               {/* Static Website */}
               <div
@@ -91,9 +251,11 @@ export default function Services() {
                   <p className="text-gray-600 mb-4">
                     Perfect for portfolios, landing pages, and simple business sites
                   </p>
-                  <div className="text-3xl font-bold text-black mb-2">$59</div>
+                  <div className="text-3xl font-bold text-black mb-2">
+                    {formatPrice(currentPricing.static.setup, currentPricing.currency)}
+                  </div>
                   <div className="text-sm text-gray-500 mb-6">
-                    One-time setup + $5/month
+                    One-time setup + {formatPrice(currentPricing.static.monthly, currentPricing.currency)}/month
                   </div>
                   <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium mb-4">
                     Most Popular for Small Businesses
@@ -148,9 +310,11 @@ export default function Services() {
                   <p className="text-gray-600 mb-4">
                     Ideal for blogs, service businesses, and content-heavy sites
                   </p>
-                  <div className="text-3xl font-bold text-black mb-2">$120</div>
+                  <div className="text-3xl font-bold text-black mb-2">
+                    {formatPrice(currentPricing.dynamic.setup, currentPricing.currency)}
+                  </div>
                   <div className="text-sm text-gray-500 mb-6">
-                    One-time setup + $7.2/month
+                    One-time setup + {formatPrice(currentPricing.dynamic.monthly, currentPricing.currency)}/month
                   </div>
                   <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium mb-4">
                     Best Value for Growing Businesses
@@ -211,9 +375,11 @@ export default function Services() {
                   <p className="text-gray-600 mb-4">
                     Complete online stores with payment processing
                   </p>
-                  <div className="text-3xl font-bold text-black mb-2">$180</div>
+                  <div className="text-3xl font-bold text-black mb-2">
+                    {formatPrice(currentPricing.ecommerce.setup, currentPricing.currency)}
+                  </div>
                   <div className="text-sm text-gray-500 mb-6">
-                    One-time setup + $11/month
+                    One-time setup + {formatPrice(currentPricing.ecommerce.monthly, currentPricing.currency)}/month
                   </div>
                   <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium mb-4">
                     Complete Online Store Solution
@@ -467,9 +633,9 @@ export default function Services() {
                     </tr>
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Extra Page</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$3</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$4</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$5</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPrice(currentPricing.addons.extraPage, currentPricing.currency)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPrice(currentPricing.addons.extraPage, currentPricing.currency)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPrice(currentPricing.addons.extraPage, currentPricing.currency)}</td>
                     </tr>
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Products</td>
@@ -481,7 +647,7 @@ export default function Services() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Extra Product</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$0.2</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPrice(currentPricing.addons.extraProduct, currentPricing.currency)}</td>
                     </tr>
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Payment Gateways</td>
@@ -492,8 +658,8 @@ export default function Services() {
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Extra Payment Gateway</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$5</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$5</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPrice(currentPricing.addons.extraPaymentGateway, currentPricing.currency)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPrice(currentPricing.addons.extraPaymentGateway, currentPricing.currency)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -512,15 +678,15 @@ export default function Services() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Static Website Page</span>
-                        <span>$3</span>
+                        <span>{formatPrice(currentPricing.addons.extraPage, currentPricing.currency)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Dynamic Website Page</span>
-                        <span>$4</span>
+                        <span>{formatPrice(currentPricing.addons.extraPage, currentPricing.currency)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>E-commerce Page</span>
-                        <span>$5</span>
+                        <span>{formatPrice(currentPricing.addons.extraPage, currentPricing.currency)}</span>
                       </div>
                     </div>
                   </div>
@@ -530,21 +696,334 @@ export default function Services() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Extra Product</span>
-                        <span>$0.2</span>
+                        <span>{formatPrice(currentPricing.addons.extraProduct, currentPricing.currency)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Extra Payment Gateway</span>
-                        <span>$5</span>
+                        <span>{formatPrice(currentPricing.addons.extraPaymentGateway, currentPricing.currency)}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-gray-900 mb-2">Design Services</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">Additional Features</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>Logo Design</span>
-                        <span>$12</span>
+                        <span>Contact Forms</span>
+                        <span>{formatPrice(currentPricing.addons.contactForms, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Newsletter Signup</span>
+                        <span>{formatPrice(currentPricing.addons.newsletterSignup, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Social Media Integration</span>
+                        <span>{formatPrice(currentPricing.addons.socialMediaIntegration, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Google Maps Integration</span>
+                        <span>{formatPrice(currentPricing.addons.googleMapsIntegration, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Booking/Appointment System</span>
+                        <span>{formatPrice(currentPricing.addons.bookingAppointmentSystem, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Live Chat</span>
+                        <span>{formatPrice(currentPricing.addons.liveChat, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Multi-language Support</span>
+                        <span>{formatPrice(currentPricing.addons.multiLanguageSupport, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Search Functionality</span>
+                        <span>{formatPrice(currentPricing.addons.searchFunctionality, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Image Gallery</span>
+                        <span>{formatPrice(currentPricing.addons.imageGallery, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Video Integration</span>
+                        <span>{formatPrice(currentPricing.addons.videoIntegration, currentPricing.currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Features Section */}
+            <div id="additional-features-section" className="bg-white rounded-lg shadow overflow-hidden mb-16">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Additional Features & Integrations</h2>
+                <p className="text-sm text-gray-600 mt-1">Enhance your website with powerful features and integrations</p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                      Communication Features
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Contact Forms</span>
+                        <span className="font-semibold text-blue-600">{formatPrice(currentPricing.addons.contactForms, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Newsletter Signup</span>
+                        <span className="font-semibold text-blue-600">{formatPrice(currentPricing.addons.newsletterSignup, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Live Chat</span>
+                        <span className="font-semibold text-blue-600">{formatPrice(currentPricing.addons.liveChat, currentPricing.currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border border-gray-200 rounded-lg p-4 hover:border-green-300 transition-colors">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                      Social & Maps
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Social Media Integration</span>
+                        <span className="font-semibold text-green-600">{formatPrice(currentPricing.addons.socialMediaIntegration, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Google Maps Integration</span>
+                        <span className="font-semibold text-green-600">{formatPrice(currentPricing.addons.googleMapsIntegration, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Booking/Appointment System</span>
+                        <span className="font-semibold text-green-600">{formatPrice(currentPricing.addons.bookingAppointmentSystem, currentPricing.currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                      Advanced Features
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Multi-language Support</span>
+                        <span className="font-semibold text-purple-600">{formatPrice(currentPricing.addons.multiLanguageSupport, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Search Functionality</span>
+                        <span className="font-semibold text-purple-600">{formatPrice(currentPricing.addons.searchFunctionality, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Image Gallery</span>
+                        <span className="font-semibold text-purple-600">{formatPrice(currentPricing.addons.imageGallery, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Video Integration</span>
+                        <span className="font-semibold text-purple-600">{formatPrice(currentPricing.addons.videoIntegration, currentPricing.currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                  <div className="text-center">
+                    <h3 className="font-semibold text-gray-900 mb-2">💡 Why Add These Features?</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      These features can significantly improve user engagement, lead generation, and overall website performance.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="text-center">
+                        <div className="font-semibold text-blue-600 mb-1">📈 Higher Conversions</div>
+                        <div className="text-gray-600">Contact forms and live chat increase lead capture</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-green-600 mb-1">🌍 Global Reach</div>
+                        <div className="text-gray-600">Multi-language support expands your audience</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-purple-600 mb-1">🎯 Better UX</div>
+                        <div className="text-gray-600">Advanced features improve user experience</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hosting & Maintenance Plans Section */}
+            <div id="hosting-section" className="bg-white rounded-lg shadow overflow-hidden mb-16">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Hosting & Maintenance Plans</h2>
+                <p className="text-sm text-gray-600 mt-1">Choose your hosting plan with unlimited updates and support</p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Static Website Plans */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900 border-b pb-2">Static Website</h3>
+                    <div className="space-y-3">
+                      <div className="text-center p-3 border border-gray-200 rounded-lg">
+                        <h4 className="font-medium text-gray-900 mb-1">Monthly</h4>
+                        <div className="text-xl font-bold text-black">{formatPrice(currentPricing.static.monthly, currentPricing.currency)}</div>
+                        <div className="text-xs text-gray-500">per month</div>
+                      </div>
+                      <div className="text-center p-3 border border-green-200 rounded-lg bg-green-50">
+                        <h4 className="font-medium text-gray-900 mb-1">Yearly</h4>
+                        <div className="text-xl font-bold text-green-600">
+                          {formatPrice(Math.round(currentPricing.static.monthly * 10 * (1 - currentPricing.discounts.yearly / 100)), currentPricing.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">per year</div>
+                        <div className="text-xs text-green-600 font-medium mt-1">
+                          Save {currentPricing.discounts.yearly}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 border border-blue-200 rounded-lg bg-blue-50">
+                        <h4 className="font-medium text-gray-900 mb-1">2 Year Plan</h4>
+                        <div className="text-xl font-bold text-blue-600">
+                          {formatPrice(Math.round(currentPricing.static.monthly * 18 * (1 - currentPricing.discounts.twoYear / 100)), currentPricing.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">per 2 years</div>
+                        <div className="text-xs text-blue-600 font-medium mt-1">
+                          Save {currentPricing.discounts.twoYear}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 border border-purple-200 rounded-lg bg-purple-50">
+                        <h4 className="font-medium text-gray-900 mb-1">3 Year Plan</h4>
+                        <div className="text-xl font-bold text-purple-600">
+                          {formatPrice(Math.round(currentPricing.static.monthly * 25 * (1 - currentPricing.discounts.threeYear / 100)), currentPricing.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">per 3 years</div>
+                        <div className="text-xs text-purple-600 font-medium mt-1">
+                          Save {currentPricing.discounts.threeYear}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Website Plans */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900 border-b pb-2">Dynamic Website</h3>
+                    <div className="space-y-3">
+                      <div className="text-center p-3 border border-gray-200 rounded-lg">
+                        <h4 className="font-medium text-gray-900 mb-1">Monthly</h4>
+                        <div className="text-xl font-bold text-black">{formatPrice(currentPricing.dynamic.monthly, currentPricing.currency)}</div>
+                        <div className="text-xs text-gray-500">per month</div>
+                      </div>
+                      <div className="text-center p-3 border border-green-200 rounded-lg bg-green-50">
+                        <h4 className="font-medium text-gray-900 mb-1">Yearly</h4>
+                        <div className="text-xl font-bold text-green-600">
+                          {formatPrice(Math.round(currentPricing.dynamic.monthly * 10 * (1 - currentPricing.discounts.yearly / 100)), currentPricing.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">per year</div>
+                        <div className="text-xs text-green-600 font-medium mt-1">
+                          Save {currentPricing.discounts.yearly}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 border border-blue-200 rounded-lg bg-blue-50">
+                        <h4 className="font-medium text-gray-900 mb-1">2 Year Plan</h4>
+                        <div className="text-xl font-bold text-blue-600">
+                          {formatPrice(Math.round(currentPricing.dynamic.monthly * 18 * (1 - currentPricing.discounts.twoYear / 100)), currentPricing.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">per 2 years</div>
+                        <div className="text-xs text-blue-600 font-medium mt-1">
+                          Save {currentPricing.discounts.twoYear}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 border border-purple-200 rounded-lg bg-purple-50">
+                        <h4 className="font-medium text-gray-900 mb-1">3 Year Plan</h4>
+                        <div className="text-xl font-bold text-purple-600">
+                          {formatPrice(Math.round(currentPricing.dynamic.monthly * 25 * (1 - currentPricing.discounts.threeYear / 100)), currentPricing.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">per 3 years</div>
+                        <div className="text-xs text-purple-600 font-medium mt-1">
+                          Save {currentPricing.discounts.threeYear}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* E-commerce Website Plans */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900 border-b pb-2">E-commerce Website</h3>
+                    <div className="space-y-3">
+                      <div className="text-center p-3 border border-gray-200 rounded-lg">
+                        <h4 className="font-medium text-gray-900 mb-1">Monthly</h4>
+                        <div className="text-xl font-bold text-black">{formatPrice(currentPricing.ecommerce.monthly, currentPricing.currency)}</div>
+                        <div className="text-xs text-gray-500">per month</div>
+                      </div>
+                      <div className="text-center p-3 border border-green-200 rounded-lg bg-green-50">
+                        <h4 className="font-medium text-gray-900 mb-1">Yearly</h4>
+                        <div className="text-xl font-bold text-green-600">
+                          {formatPrice(Math.round(currentPricing.ecommerce.monthly * 10 * (1 - currentPricing.discounts.yearly / 100)), currentPricing.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">per year</div>
+                        <div className="text-xs text-green-600 font-medium mt-1">
+                          Save {currentPricing.discounts.yearly}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 border border-blue-200 rounded-lg bg-blue-50">
+                        <h4 className="font-medium text-gray-900 mb-1">2 Year Plan</h4>
+                        <div className="text-xl font-bold text-blue-600">
+                          {formatPrice(Math.round(currentPricing.ecommerce.monthly * 18 * (1 - currentPricing.discounts.twoYear / 100)), currentPricing.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">per 2 years</div>
+                        <div className="text-xs text-blue-600 font-medium mt-1">
+                          Save {currentPricing.discounts.twoYear}%
+                        </div>
+                      </div>
+                      <div className="text-center p-3 border border-purple-200 rounded-lg bg-purple-50">
+                        <h4 className="font-medium text-gray-900 mb-1">3 Year Plan</h4>
+                        <div className="text-xl font-bold text-purple-600">
+                          {formatPrice(Math.round(currentPricing.ecommerce.monthly * 25 * (1 - currentPricing.discounts.threeYear / 100)), currentPricing.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">per 3 years</div>
+                        <div className="text-xs text-purple-600 font-medium mt-1">
+                          Save {currentPricing.discounts.threeYear}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* What's Included */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900 border-b pb-2">What's Included</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center">
+                        <span className="text-green-600 mr-2">✓</span>
+                        Unlimited Updates
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-green-600 mr-2">✓</span>
+                        24/7 Support
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-green-600 mr-2">✓</span>
+                        SSL Certificate
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-green-600 mr-2">✓</span>
+                        Daily Backups
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-green-600 mr-2">✓</span>
+                        Performance Monitoring
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-green-600 mr-2">✓</span>
+                        Security Updates
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-green-600 mr-2">✓</span>
+                        Content Updates
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-green-600 mr-2">✓</span>
+                        SEO Optimization
                       </div>
                     </div>
                   </div>
@@ -562,23 +1041,38 @@ export default function Services() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 border border-gray-200 rounded-lg">
                     <h3 className="font-semibold text-gray-900 mb-2">Monthly</h3>
-                    <div className="text-2xl font-bold text-black">$2.4</div>
+                    <div className="text-2xl font-bold text-black">{formatPrice(currentPricing.addons.emailAccount, currentPricing.currency)}</div>
                     <div className="text-sm text-gray-500">per email account</div>
                   </div>
-                  <div className="text-center p-4 border border-gray-200 rounded-lg">
+                  <div className="text-center p-4 border border-green-200 rounded-lg bg-green-50">
                     <h3 className="font-semibold text-gray-900 mb-2">Yearly</h3>
-                    <div className="text-2xl font-bold text-black">$24</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {formatPrice(Math.round(currentPricing.addons.emailAccount * 10 * (1 - currentPricing.discounts.yearly / 100)), currentPricing.currency)}
+                    </div>
                     <div className="text-sm text-gray-500">per email account</div>
+                    <div className="text-xs text-green-600 font-medium mt-1">
+                      Save {currentPricing.discounts.yearly}%
+                    </div>
                   </div>
-                  <div className="text-center p-4 border border-gray-200 rounded-lg">
+                  <div className="text-center p-4 border border-blue-200 rounded-lg bg-blue-50">
                     <h3 className="font-semibold text-gray-900 mb-2">2 Year Plan</h3>
-                    <div className="text-2xl font-bold text-black">$43</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {formatPrice(Math.round(currentPricing.addons.emailAccount * 18 * (1 - currentPricing.discounts.twoYear / 100)), currentPricing.currency)}
+                    </div>
                     <div className="text-sm text-gray-500">per email account</div>
+                    <div className="text-xs text-blue-600 font-medium mt-1">
+                      Save {currentPricing.discounts.twoYear}%
+                    </div>
                   </div>
-                  <div className="text-center p-4 border border-gray-200 rounded-lg">
+                  <div className="text-center p-4 border border-purple-200 rounded-lg bg-purple-50">
                     <h3 className="font-semibold text-gray-900 mb-2">3 Year Plan</h3>
-                    <div className="text-2xl font-bold text-black">$60</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {formatPrice(Math.round(currentPricing.addons.emailAccount * 25 * (1 - currentPricing.discounts.threeYear / 100)), currentPricing.currency)}
+                    </div>
                     <div className="text-sm text-gray-500">per email account</div>
+                    <div className="text-xs text-purple-600 font-medium mt-1">
+                      Save {currentPricing.discounts.threeYear}%
+                    </div>
                   </div>
                 </div>
               </div>

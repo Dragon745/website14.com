@@ -38,3 +38,96 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+
+## Blog System
+
+The website includes a complete blog system with the following features:
+
+### Admin Panel Integration
+
+- Blog management is integrated into the admin panel at `/admin`
+- Create, edit, and delete blog posts through the web interface
+- Rich text editor with markdown support
+- SEO meta tag management
+- Post status management (draft/published)
+
+### Blog Features
+
+- **Public Blog Listing**: `/blog` - Displays all published posts with search and filtering
+- **Individual Post Pages**: `/blog/[slug]` - Dynamic routes for each blog post
+- **SEO Optimized**: Proper meta tags, Open Graph, and structured data
+- **Search & Filter**: Client-side search and tag filtering
+- **Related Posts**: Shows related posts on individual post pages
+- **Reading Time**: Automatically calculates and displays reading time
+
+### Technical Implementation
+
+- **Firestore Storage**: All posts stored in `blog/` collection
+- **Public Access**: Blog posts are publicly readable
+- **Admin Only**: Only admins can create/edit posts
+- **Static Generation**: Blog posts converted to static HTML files at build time
+- **Dynamic Sitemap**: Blog posts automatically included in sitemap.xml
+- **Build Integration**: Blog generation and sitemap generation integrated into build process
+
+### Usage
+
+#### Adding Sample Blog Post
+
+```bash
+npm run add-sample-blog
+```
+
+#### Generating Sitemap
+
+```bash
+npm run generate-sitemap
+```
+
+#### Generating Blog Pages
+
+```bash
+npm run generate-blog
+```
+
+#### Building
+
+```bash
+npm run build
+```
+
+#### Deployment
+
+```bash
+npm run deploy
+```
+
+### Blog Post Structure
+
+```javascript
+{
+  title: string,
+  content: string (markdown),
+  excerpt: string,
+  slug: string (auto-generated),
+  tags: string[],
+  status: 'draft' | 'published',
+  publishedAt: timestamp,
+  createdAt: timestamp,
+  updatedAt: timestamp,
+  seo: {
+    metaTitle: string,
+    metaDescription: string,
+    keywords: string
+  }
+}
+```
+
+### Workflow
+
+1. **Create Post**: Use admin panel to create new blog post
+2. **Edit Content**: Write content with markdown support
+3. **Set SEO**: Add meta title, description, and keywords
+4. **Publish**: Change status to "published"
+5. **Build**: Run `npm run build` to generate static files
+6. **Generate Blog**: Run `npm run generate-blog` to create static HTML for blog posts
+7. **Deploy**: Deploy to Firebase Hosting
