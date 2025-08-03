@@ -148,7 +148,7 @@ export default function Blog() {
 
                                         {post.excerpt && (
                                             <p className="text-gray-600 mb-4">
-                                                {truncateText(post.excerpt, 150)}
+                                                {truncateText(post.excerpt.replace(/[#*`\[\]]/g, ''), 150)}
                                             </p>
                                         )}
 

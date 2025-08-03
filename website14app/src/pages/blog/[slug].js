@@ -118,30 +118,199 @@ export default function BlogPost({ post, relatedPosts }) {
     };
 
     const renderContent = (content) => {
-        // Simple markdown-like rendering
-        return content
-            .split('\n')
-            .map((line, index) => {
-                if (line.startsWith('# ')) {
-                    return <h1 key={index} className="text-3xl font-bold text-gray-900 mt-8 mb-4">{line.substring(2)}</h1>;
+        // Enhanced markdown rendering
+        const lines = content.split('\n');
+        const elements = [];
+        let inCodeBlock = false;
+        let codeBlockContent = [];
+        let inOrderedList = false;
+        let inUnorderedList = false;
+        let listItems = [];
+
+        lines.forEach((line, index) => {
+            // Handle code blocks
+            if (line.startsWith('```')) {
+                // Close any open lists before code block
+                if (inOrderedList) {
+                    elements.push(
+                        <ol key={`ol-${index}`} className="list-decimal list-inside mb-4">
+                            {listItems.map((item, i) => <li key={i} className="text-gray-700 mb-2">{item}</li>)}
+                        </ol>
+                    );
+                    listItems = [];
+                    inOrderedList = false;
                 }
-                if (line.startsWith('## ')) {
-                    return <h2 key={index} className="text-2xl font-bold text-gray-900 mt-6 mb-3">{line.substring(3)}</h2>;
+                if (inUnorderedList) {
+                    elements.push(
+                        <ul key={`ul-${index}`} className="list-disc list-inside mb-4">
+                            {listItems.map((item, i) => <li key={i} className="text-gray-700 mb-2">{item}</li>)}
+                        </ul>
+                    );
+                    listItems = [];
+                    inUnorderedList = false;
                 }
-                if (line.startsWith('### ')) {
-                    return <h3 key={index} className="text-xl font-bold text-gray-900 mt-4 mb-2">{line.substring(4)}</h3>;
+
+                if (inCodeBlock) {
+                    // End code block
+                    elements.push(
+                        <pre key={`code-${index}`} className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4">
+                            <code className="text-sm text-gray-800">
+                                {codeBlockContent.join('\n')}
+                            </code>
+                        </pre>
+                    );
+                    codeBlockContent = [];
+                    inCodeBlock = false;
+                } else {
+                    // Start code block
+                    inCodeBlock = true;
                 }
-                if (line.startsWith('**') && line.endsWith('**')) {
-                    return <p key={index} className="text-gray-700 mb-4"><strong>{line.substring(2, line.length - 2)}</strong></p>;
+                return;
+            }
+
+            if (inCodeBlock) {
+                codeBlockContent.push(line);
+                return;
+            }
+
+            // Handle headers
+            if (line.startsWith('# ')) {
+                closeLists();
+                elements.push(<h1 key={index} className="text-3xl font-bold text-gray-900 mt-8 mb-4">{line.substring(2)}</h1>);
+                return;
+            }
+            if (line.startsWith('## ')) {
+                closeLists();
+                elements.push(<h2 key={index} className="text-2xl font-bold text-gray-900 mt-6 mb-3">{line.substring(3)}</h2>);
+                return;
+            }
+            if (line.startsWith('### ')) {
+                closeLists();
+                elements.push(<h3 key={index} className="text-xl font-bold text-gray-900 mt-4 mb-2">{line.substring(4)}</h3>);
+                return;
+            }
+            if (line.startsWith('#### ')) {
+                closeLists();
+                elements.push(<h4 key={index} className="text-lg font-bold text-gray-900 mt-3 mb-2">{line.substring(5)}</h4>);
+                return;
+            }
+
+            // Handle ordered lists
+            if (line.match(/^\d+\.\s/)) {
+                if (!inOrderedList) {
+                    closeLists();
+                    inOrderedList = true;
                 }
-                if (line.startsWith('*') && line.endsWith('*')) {
-                    return <p key={index} className="text-gray-700 mb-4 italic">{line.substring(1, line.length - 1)}</p>;
+                listItems.push(formatInlineMarkdown(line.replace(/^\d+\.\s/, '')));
+                return;
+            }
+
+            // Handle unordered lists
+            if (line.startsWith('- ') || line.startsWith('* ')) {
+                if (!inUnorderedList) {
+                    closeLists();
+                    inUnorderedList = true;
                 }
-                if (line.trim() === '') {
-                    return <br key={index} />;
+                listItems.push(formatInlineMarkdown(line.substring(2)));
+                return;
+            }
+
+            // Handle blockquotes
+            if (line.startsWith('> ')) {
+                closeLists();
+                elements.push(
+                    <blockquote key={index} className="border-l-4 border-blue-500 pl-4 italic text-gray-600 mb-4">
+                        {formatInlineMarkdown(line.substring(2))}
+                    </blockquote>
+                );
+                return;
+            }
+
+            // Handle horizontal rules
+            if (line.match(/^[-*_]{3,}$/)) {
+                closeLists();
+                elements.push(<hr key={index} className="my-6 border-gray-300" />);
+                return;
+            }
+
+            // Handle empty lines
+            if (line.trim() === '') {
+                closeLists();
+                elements.push(<br key={index} />);
+                return;
+            }
+
+            // Handle inline formatting and regular paragraphs
+            closeLists();
+            const formattedLine = formatInlineMarkdown(line);
+            elements.push(<p key={index} className="text-gray-700 mb-4">{formattedLine}</p>);
+        });
+
+        // Close any remaining lists
+        closeLists();
+
+        function closeLists() {
+            if (inOrderedList) {
+                elements.push(
+                    <ol key={`ol-${Date.now()}`} className="list-decimal list-inside mb-4">
+                        {listItems.map((item, i) => <li key={i} className="text-gray-700 mb-2">{item}</li>)}
+                    </ol>
+                );
+                listItems = [];
+                inOrderedList = false;
+            }
+            if (inUnorderedList) {
+                elements.push(
+                    <ul key={`ul-${Date.now()}`} className="list-disc list-inside mb-4">
+                        {listItems.map((item, i) => <li key={i} className="text-gray-700 mb-2">{item}</li>)}
+                    </ul>
+                );
+                listItems = [];
+                inUnorderedList = false;
+            }
+        }
+
+        return elements;
+    };
+
+    const formatInlineMarkdown = (text) => {
+        // Handle bold (**text** or __text__)
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+        // Handle italic (*text* or _text_)
+        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        text = text.replace(/_(.*?)_/g, '<em>$1</em>');
+
+        // Handle inline code (`code`)
+        text = text.replace(/`(.*?)`/g, '<code className="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>');
+
+        // Handle links [text](url)
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>');
+
+        // Convert to JSX elements
+        const parts = text.split(/(<[^>]+>.*?<\/[^>]+>)/);
+        return parts.map((part, i) => {
+            if (part.startsWith('<strong>')) {
+                const content = part.replace(/<\/?strong>/g, '');
+                return <strong key={i}>{content}</strong>;
+            }
+            if (part.startsWith('<em>')) {
+                const content = part.replace(/<\/?em>/g, '');
+                return <em key={i}>{content}</em>;
+            }
+            if (part.startsWith('<code')) {
+                const content = part.replace(/<\/?code[^>]*>/g, '');
+                return <code key={i} className="bg-gray-100 px-1 py-0.5 rounded text-sm">{content}</code>;
+            }
+            if (part.startsWith('<a')) {
+                const match = part.match(/href="([^"]+)"[^>]*>([^<]+)<\/a>/);
+                if (match) {
+                    return <a key={i} href={match[1]} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">{match[2]}</a>;
                 }
-                return <p key={index} className="text-gray-700 mb-4">{line}</p>;
-            });
+            }
+            return part;
+        });
     };
 
     if (!post) {
