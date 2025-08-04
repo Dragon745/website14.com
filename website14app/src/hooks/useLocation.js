@@ -5,8 +5,6 @@ const useLocation = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    console.log(`[${new Date().toISOString()}] 🚀 useLocation: Hook initialized`);
-
     const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
     const apiTimeout = 5000; // 5 seconds
 
@@ -23,7 +21,6 @@ const useLocation = () => {
     };
 
     const loadLocation = async () => {
-        console.log(`[${new Date().toISOString()}] 📍 useLocation: loadLocation started`);
 
         try {
             // Check localStorage for cached location
@@ -34,7 +31,6 @@ const useLocation = () => {
             if (cachedLocation && cachedTimestamp) {
                 const cacheAge = now - parseInt(cachedTimestamp);
                 if (cacheAge < cacheExpiry) {
-                    console.log(`[${new Date().toISOString()}] ✅ useLocation: Using cached location`);
                     const parsedLocation = JSON.parse(cachedLocation);
                     setUserLocation(parsedLocation);
                     return;
@@ -46,16 +42,9 @@ const useLocation = () => {
             const disabledTimestamp = localStorage.getItem('website14_api_disabled_timestamp');
             const disableExpiry = 60 * 60 * 1000; // 1 hour
 
-            console.log(`[${new Date().toISOString()}] 📍 useLocation: API status:`, {
-                apiDisabled: !!apiDisabled,
-                disabledTimestamp,
-                disableExpiry
-            });
-
             if (apiDisabled && disabledTimestamp) {
                 const disableAge = now - parseInt(disabledTimestamp);
                 if (disableAge < disableExpiry) {
-                    console.log(`[${new Date().toISOString()}] ⚠️ useLocation: API disabled, using fallback`);
                     setFallbackLocation();
                     return;
                 } else {
@@ -66,7 +55,6 @@ const useLocation = () => {
             }
 
             // Try to fetch location from API
-            console.log(`[${new Date().toISOString()}] 🌐 useLocation: Starting API fetch`);
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), apiTimeout);
@@ -83,7 +71,6 @@ const useLocation = () => {
                 }
 
                 const locationData = await response.json();
-                console.log(`[${new Date().toISOString()}] 📍 useLocation: API response:`, locationData);
 
                 // Validate the response
                 if (!locationData || !locationData.country || !locationData.currency) {
@@ -97,7 +84,6 @@ const useLocation = () => {
                     ip: locationData.ip
                 };
 
-                console.log(`[${new Date().toISOString()}] ✅ useLocation: Location set:`, location);
                 setUserLocation(location);
                 localStorage.setItem('website14_user_location', JSON.stringify(location));
                 localStorage.setItem('website14_location_timestamp', now.toString());
@@ -108,19 +94,11 @@ const useLocation = () => {
             } catch (fetchError) {
                 clearTimeout(timeoutId);
 
-                if (fetchError.name === 'AbortError') {
-                    console.log(`[${new Date().toISOString()}] ⏰ useLocation: API timeout reached`);
-                } else {
-                    console.log(`[${new Date().toISOString()}] ❌ useLocation: API error:`, fetchError.message);
-                }
-
                 // Track API failures
                 const failureCount = parseInt(localStorage.getItem('website14_api_failures') || '0') + 1;
-                console.log(`[${new Date().toISOString()}] 📍 useLocation: Failure count:`, failureCount);
                 localStorage.setItem('website14_api_failures', failureCount.toString());
 
                 if (failureCount >= 3) {
-                    console.log(`[${new Date().toISOString()}] ⚠️ useLocation: Disabling API due to failures`);
                     localStorage.setItem('website14_api_disabled', 'true');
                     localStorage.setItem('website14_api_disabled_timestamp', now.toString());
                 }
@@ -128,43 +106,33 @@ const useLocation = () => {
                 // Try to use expired cache as fallback
                 if (cachedLocation) {
                     try {
-                        console.log(`[${new Date().toISOString()}] 🔄 useLocation: Using expired cache as fallback:`, cachedLocation);
                         const parsedLocation = JSON.parse(cachedLocation);
                         setUserLocation(parsedLocation);
                         return;
                     } catch (parseError) {
-                        console.log(`[${new Date().toISOString()}] ❌ useLocation: Error parsing expired cache:`, parseError.message);
+                        // Silent fallback
                     }
                 }
 
                 // Final fallback
-                console.log(`[${new Date().toISOString()}] 🔄 useLocation: No cache available, using fallback`);
                 setFallbackLocation();
             }
 
         } catch (error) {
-            console.log(`[${new Date().toISOString()}] ❌ useLocation: Unexpected error:`, error.message);
             setError(error);
             setFallbackLocation();
         }
-
-        console.log(`[${new Date().toISOString()}] 🏁 useLocation: loadLocation finished`);
     };
 
     const loadLocationAfterPaint = () => {
-        console.log(`[${new Date().toISOString()}] 📍 useLocation: loadLocationAfterPaint called`);
-
         if (typeof window !== 'undefined' && window.requestIdleCallback) {
-            console.log(`[${new Date().toISOString()}] 📍 useLocation: Using requestIdleCallback`);
             window.requestIdleCallback(() => loadLocation(), { timeout: 1000 });
         } else {
-            console.log(`[${new Date().toISOString()}] 📍 useLocation: Using setTimeout fallback`);
             setTimeout(loadLocation, 100);
         }
     };
 
     useEffect(() => {
-        console.log(`[${new Date().toISOString()}] 📍 useLocation: useEffect started`);
         loadLocationAfterPaint();
     }, []);
 
@@ -172,7 +140,6 @@ const useLocation = () => {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             window.resetLocationCache = () => {
-                console.log(`[${new Date().toISOString()}] 🔄 Location cache reset`);
                 localStorage.removeItem('website14_user_location');
                 localStorage.removeItem('website14_location_timestamp');
                 localStorage.removeItem('website14_api_failures');

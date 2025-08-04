@@ -9,34 +9,19 @@ export default function OrderPage() {
     const router = useRouter();
     const [selectedServices, setSelectedServices] = useState({});
     const [billingCycle, setBillingCycle] = useState('monthly'); // monthly, yearly, twoYear, threeYear
-
-    console.log(`[${new Date().toISOString()}] 🚀 OrderPage: Component rendering`);
+    const [selectedCurrency, setSelectedCurrency] = useState(null);
 
     // Use the location hook
     const { location: userLocation, isLoading: locationLoading, error: locationError, resetLocationCache } = useLocation();
 
-    console.log(`[${new Date().toISOString()}] 📍 OrderPage: Location state:`, {
-        userLocation,
-        locationLoading,
-        locationError: locationError?.message,
-        currency: userLocation?.currency
-    });
-
-    // Use the pricing hook
-    const { pricingData, isLoading: pricingLoading, error: pricingError, resetPricingCache } = usePricing(userLocation?.currency);
-
-    console.log(`[${new Date().toISOString()}] 💰 OrderPage: Pricing state:`, {
-        pricingData: pricingData ? 'Loaded' : 'Not loaded',
-        pricingLoading,
-        pricingError: pricingError?.message,
-        userCurrency: userLocation?.currency
-    });
+    // Use the pricing hook with selected currency or detected currency
+    const effectiveCurrency = selectedCurrency || userLocation?.currency;
+    const { pricingData, isLoading: pricingLoading, error: pricingError, resetPricingCache } = usePricing(effectiveCurrency);
 
     // Auto-select package based on URL parameter
     useEffect(() => {
         if (router.query.package) {
             const packageType = router.query.package;
-            console.log(`[${new Date().toISOString()}] 🎯 OrderPage: Auto-selecting package:`, packageType);
 
             // Auto-select the package based on URL parameter
             setSelectedServices(prev => ({
@@ -94,16 +79,13 @@ export default function OrderPage() {
 
     const formatPrice = (price, currency = 'USD') => {
         const symbol = currencySymbols[currency] || '$';
-        return `${symbol}${price}`;
+        // Round to 2 decimal places and format
+        const roundedPrice = Math.round(price * 100) / 100;
+        return `${symbol}${roundedPrice.toFixed(2)}`;
     };
 
     // Get current pricing (either from Firestore or default)
     const getCurrentPricing = () => {
-        console.log(`[${new Date().toISOString()}] 🔍 OrderPage: getCurrentPricing called with:`, {
-            pricingData: pricingData ? 'Available' : 'Not available',
-            userLocation: userLocation ? 'Available' : 'Not available',
-            currency: userLocation?.currency
-        });
 
         // Always use default pricing as fallback, even if pricingData is null
         const basePricing = {
@@ -140,14 +122,8 @@ export default function OrderPage() {
                 twoYear: pricingData?.twoYearDiscount !== undefined ? pricingData.twoYearDiscount : defaultPricing.discounts.twoYear,
                 threeYear: pricingData?.threeYearDiscount !== undefined ? pricingData.threeYearDiscount : defaultPricing.discounts.threeYear
             },
-            currency: userLocation?.currency || 'USD'
+            currency: effectiveCurrency || 'USD'
         };
-
-        console.log(`[${new Date().toISOString()}] ✅ OrderPage: getCurrentPricing returning:`, {
-            currency: basePricing.currency,
-            staticSetup: basePricing.static.setup,
-            staticMonthly: basePricing.static.monthly
-        });
 
         return basePricing;
     };
@@ -160,7 +136,6 @@ export default function OrderPage() {
     };
 
     const calculateTotal = () => {
-        console.log(`[${new Date().toISOString()}] 🧮 OrderPage: calculateTotal called`);
         const pricing = getCurrentPricing();
         let setupTotal = 0;
         let monthlyTotal = 0;
@@ -203,39 +178,40 @@ export default function OrderPage() {
             }
         });
 
-        // Apply billing cycle discounts to monthly fees
+        // Calculate billing cycle multipliers and discounts
+        const billingCycleMultipliers = {
+            monthly: 1,
+            yearly: 12,
+            twoYear: 24,
+            threeYear: 36
+        };
+
+        const multiplier = billingCycleMultipliers[billingCycle] || 1;
         const discount = pricing.discounts[billingCycle] || 0;
-        const discountedMonthlyTotal = monthlyTotal * (1 - discount / 100);
+
+        // Calculate the total for the billing period (e.g., 12 months for yearly)
+        const originalPeriodTotal = monthlyTotal * multiplier;
+        const discountedPeriodTotal = originalPeriodTotal * (1 - discount / 100);
 
         const result = {
             setupTotal,
-            monthlyTotal: discountedMonthlyTotal,
+            monthlyTotal: discountedPeriodTotal,
             originalMonthlyTotal: monthlyTotal,
+            originalPeriodTotal,
+            discountedPeriodTotal,
             breakdown,
-            discount
-        };
-
-        console.log(`[${new Date().toISOString()}] 📊 OrderPage: calculateTotal result:`, {
-            setupTotal,
-            monthlyTotal: discountedMonthlyTotal,
-            originalMonthlyTotal: monthlyTotal,
             discount,
-            breakdownCount: breakdown.length
-        });
+            multiplier,
+            billingCycle
+        };
 
         return result;
     };
 
-    const { setupTotal, monthlyTotal, originalMonthlyTotal, breakdown, discount } = calculateTotal();
+    const { setupTotal, monthlyTotal, originalMonthlyTotal, originalPeriodTotal, discountedPeriodTotal, breakdown, discount, multiplier, billingCycle: calculatedBillingCycle } = calculateTotal();
     const currentPricing = getCurrentPricing();
 
-    console.log(`[${new Date().toISOString()}] 🎯 OrderPage: Final state:`, {
-        selectedServicesCount: Object.keys(selectedServices).filter(key => selectedServices[key]).length,
-        billingCycle,
-        currency: currentPricing.currency,
-        setupTotal,
-        monthlyTotal
-    });
+
 
     const services = [
         {
@@ -402,6 +378,42 @@ export default function OrderPage() {
                     )}
                 </div>
 
+                {/* Floating Currency Selector */}
+                <div className="fixed top-20 right-4 z-50">
+                    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500 font-medium">Currency</span>
+                            <select
+                                value={selectedCurrency || ''}
+                                onChange={(e) => setSelectedCurrency(e.target.value || null)}
+                                className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                                <option value="">Auto</option>
+                                <option value="USD">USD</option>
+                                <option value="INR">INR</option>
+                                <option value="CAD">CAD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="SAR">SAR</option>
+                                <option value="AED">AED</option>
+                                <option value="QAR">QAR</option>
+                                <option value="KWD">KWD</option>
+                                <option value="BHD">BHD</option>
+                                <option value="OMR">OMR</option>
+                            </select>
+                            {selectedCurrency && (
+                                <button
+                                    onClick={() => setSelectedCurrency(null)}
+                                    className="text-xs text-gray-400 hover:text-gray-600"
+                                    title="Reset to auto-detect"
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Services Selection */}
                     <div className="lg:col-span-2">
@@ -470,10 +482,10 @@ export default function OrderPage() {
                                             onChange={(e) => setBillingCycle(e.target.value)}
                                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
-                                            <option value="monthly">Monthly</option>
-                                            <option value="yearly">Yearly ({currentPricing.discounts.yearly}% off)</option>
-                                            <option value="twoYear">2 Years ({currentPricing.discounts.twoYear}% off)</option>
-                                            <option value="threeYear">3 Years ({currentPricing.discounts.threeYear}% off)</option>
+                                            <option value="monthly">Monthly Billing</option>
+                                            <option value="yearly">Yearly Billing ({currentPricing.discounts.yearly}% off)</option>
+                                            <option value="twoYear">2 Year Billing ({currentPricing.discounts.twoYear}% off)</option>
+                                            <option value="threeYear">3 Year Billing ({currentPricing.discounts.threeYear}% off)</option>
                                         </select>
                                     </div>
 
@@ -515,23 +527,32 @@ export default function OrderPage() {
                                         {originalMonthlyTotal > 0 && (
                                             <>
                                                 <div className="flex justify-between items-center text-sm">
-                                                    <span>Monthly Total:</span>
+                                                    <span>Monthly Rate:</span>
                                                     <span className="font-medium text-gray-900">
                                                         {formatPrice(originalMonthlyTotal, currentPricing.currency)}
                                                     </span>
                                                 </div>
 
+                                                {multiplier > 1 && (
+                                                    <div className="flex justify-between items-center text-sm">
+                                                        <span>{billingCycle === 'yearly' ? 'Yearly' : billingCycle === 'twoYear' ? '2 Years' : billingCycle === 'threeYear' ? '3 Years' : 'Period'} Total:</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {formatPrice(originalPeriodTotal, currentPricing.currency)}
+                                                        </span>
+                                                    </div>
+                                                )}
+
                                                 {discount > 0 && (
                                                     <div className="flex justify-between items-center text-sm text-green-600">
                                                         <span>Discount ({discount}%):</span>
-                                                        <span>-{formatPrice(originalMonthlyTotal - monthlyTotal, currentPricing.currency)}</span>
+                                                        <span>-{formatPrice(originalPeriodTotal - discountedPeriodTotal, currentPricing.currency)}</span>
                                                     </div>
                                                 )}
 
                                                 <div className="flex justify-between items-center text-sm">
-                                                    <span>Monthly After Discount:</span>
+                                                    <span>{billingCycle === 'monthly' ? 'Monthly' : billingCycle === 'yearly' ? 'Yearly' : billingCycle === 'twoYear' ? '2 Years' : billingCycle === 'threeYear' ? '3 Years' : 'Period'} After Discount:</span>
                                                     <span className="font-medium text-blue-600">
-                                                        {formatPrice(monthlyTotal, currentPricing.currency)}
+                                                        {formatPrice(discountedPeriodTotal, currentPricing.currency)}
                                                     </span>
                                                 </div>
                                             </>
@@ -541,7 +562,7 @@ export default function OrderPage() {
                                             <div className="flex justify-between items-center text-lg font-bold">
                                                 <span>Total:</span>
                                                 <span className="text-blue-600">
-                                                    {formatPrice(setupTotal + monthlyTotal, currentPricing.currency)}
+                                                    {formatPrice(setupTotal + discountedPeriodTotal, currentPricing.currency)}
                                                 </span>
                                             </div>
                                         </div>

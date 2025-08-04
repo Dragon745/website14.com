@@ -7,11 +7,15 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function Services() {
+  // State for manual currency selection
+  const [selectedCurrency, setSelectedCurrency] = useState(null);
+
   // Use the location hook
   const { location: userLocation, isLoading: locationLoading, error: locationError } = useLocation();
 
-  // Use the pricing hook
-  const { pricingData, isLoading: pricingLoading, error: pricingError } = usePricing(userLocation?.currency);
+  // Use the pricing hook with selected currency or detected currency
+  const effectiveCurrency = selectedCurrency || userLocation?.currency;
+  const { pricingData, isLoading: pricingLoading, error: pricingError } = usePricing(effectiveCurrency);
 
   // Debug: Log when pricing hook is called
   useEffect(() => {
@@ -246,7 +250,7 @@ export default function Services() {
 
   // Get current pricing (either from Firestore or default)
   const getCurrentPricing = () => {
-    console.log('getCurrentPricing called with:', { pricingData, userLocation });
+    console.log('getCurrentPricing called with:', { pricingData, userLocation, effectiveCurrency });
 
     // Always use default pricing as fallback, even if pricingData is null
     const basePricing = {
@@ -283,7 +287,7 @@ export default function Services() {
         twoYear: pricingData?.twoYearDiscount !== undefined ? pricingData.twoYearDiscount : defaultPricing.discounts.twoYear,
         threeYear: pricingData?.threeYearDiscount !== undefined ? pricingData.threeYearDiscount : defaultPricing.discounts.threeYear
       },
-      currency: userLocation?.currency || 'USD'
+      currency: effectiveCurrency || 'USD'
     };
 
     console.log('Final pricing data:', basePricing);
@@ -365,6 +369,42 @@ export default function Services() {
               </Link>
             </div>
 
+            {/* Floating Currency Selector */}
+            <div className="fixed top-20 right-4 z-50">
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-medium">Currency</span>
+                  <select
+                    value={selectedCurrency || ''}
+                    onChange={(e) => setSelectedCurrency(e.target.value || null)}
+                    className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="">Auto</option>
+                    <option value="USD">USD</option>
+                    <option value="INR">INR</option>
+                    <option value="CAD">CAD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="SAR">SAR</option>
+                    <option value="AED">AED</option>
+                    <option value="QAR">QAR</option>
+                    <option value="KWD">KWD</option>
+                    <option value="BHD">BHD</option>
+                    <option value="OMR">OMR</option>
+                  </select>
+                  {selectedCurrency && (
+                    <button
+                      onClick={() => setSelectedCurrency(null)}
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                      title="Reset to auto-detect"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Social Proof Bar */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-16">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -434,7 +474,7 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/order">
+                <Link href="/order?package=staticSetup">
                   <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
                     Start Your Website
                   </button>
@@ -505,7 +545,7 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/order">
+                <Link href="/order?package=dynamicSetup">
                   <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
                     Start Your Website
                   </button>
@@ -574,7 +614,7 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/order">
+                <Link href="/order?package=ecommerceSetup">
                   <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
                     Start Your Store
                   </button>

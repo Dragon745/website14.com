@@ -13,9 +13,8 @@ export const usePreload = () => {
         try {
             await router.prefetch(path);
             preloadedPages.current.add(path);
-            console.log(`✅ Preloaded: ${path}`);
         } catch (error) {
-            console.warn(`⚠️ Failed to preload ${path}:`, error);
+            // Silent fallback
         }
     };
 
@@ -34,9 +33,8 @@ export const usePreload = () => {
 
         try {
             await Promise.all(pages.map(page => preloadPage(page)));
-            console.log('🚀 All pages preloaded successfully');
         } catch (error) {
-            console.warn('⚠️ Some pages failed to preload:', error);
+            // Silent fallback
         }
     };
 
@@ -52,9 +50,8 @@ export const usePreload = () => {
                     preloadPage(`/blog/${post.slug}`)
                 )
             );
-            console.log('📝 Blog posts preloaded successfully');
         } catch (error) {
-            console.warn('⚠️ Some blog posts failed to preload:', error);
+            // Silent fallback
         }
     };
 
