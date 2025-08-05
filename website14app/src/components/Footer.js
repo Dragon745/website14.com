@@ -36,6 +36,8 @@ export default function Footer() {
     const handleLogout = async () => {
         try {
             await signOut(auth);
+            // Redirect to home page after successful logout
+            router.push('/');
         } catch (error) {
             console.error('Error signing out:', error);
         }
@@ -73,40 +75,41 @@ export default function Footer() {
                         </Link>
                     </li>
                     {user ? (
-                        <li className="relative">
-                            <button
-                                onClick={() => setShowUserMenu(!showUserMenu)}
-                                onBlur={() => setTimeout(() => setShowUserMenu(false), 200)}
-                                className="flex items-center space-x-2 text-gray-500 hover:text-black transition-colors duration-300 font-inter"
-                            >
-                                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                                    <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                        <>
+                            <li>
+                                <Link href="/client" className="text-gray-500 hover:text-black transition-colors duration-300 font-inter font-medium">
+                                    Client Portal
+                                </Link>
+                            </li>
+                            <li className="relative">
+                                <button
+                                    onClick={() => setShowUserMenu(!showUserMenu)}
+                                    onBlur={() => setTimeout(() => setShowUserMenu(false), 200)}
+                                    className="flex items-center space-x-2 text-gray-500 hover:text-black transition-colors duration-300 font-inter"
+                                >
+                                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <span className="hidden md:block">{userData?.name || user.email}</span>
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                                     </svg>
-                                </div>
-                                <span className="hidden md:block">{userData?.name || user.email}</span>
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                            </button>
+                                </button>
 
-                            {showUserMenu && (
-                                <div className="absolute bottom-full mb-2 right-0 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                    <Link
-                                        href="/client"
-                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    >
-                                        Client Portal
-                                    </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    >
-                                        Logout
-                                    </button>
-                                </div>
-                            )}
-                        </li>
+                                {showUserMenu && (
+                                    <div className="absolute bottom-full mb-2 right-0 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                        <button
+                                            onClick={handleLogout}
+                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                )}
+                            </li>
+                        </>
                     ) : (
                         <li>
                             <Link href={`/login?returnUrl=${encodeURIComponent(router.asPath)}`} className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">

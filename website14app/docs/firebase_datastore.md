@@ -19,9 +19,9 @@
 
 **System Fields**:
 
-- `timestamp` (timestamp) - Server timestamp when the lead was created
+- `timestamp` (timestamp) - Server timestamp when the lead was created (using serverTimestamp())
 - `status` (string) - Lead status (default: 'new')
-- `source` (string) - Source of the lead (default: 'website-form')
+- `source` (string) - Source of the lead (default: 'website-form' or 'project-builder')
 - `recaptchaToken` (string) - reCAPTCHA v3 token for security verification
 
 **Authentication Fields**:
@@ -42,6 +42,14 @@
 - `language` (string) - User's browser language
 - `platform` (string) - User's operating system
 - `screenResolution` (string) - User's screen resolution
+
+**Project Builder Specific Fields** (when source is 'project-builder'):
+
+- `businessType` (string) - Type of business
+- `industry` (string) - Industry classification
+- `recommendedPackage` (string) - Package recommendation (static/dynamic/ecommerce)
+- `recommendedAddons` (array) - Recommended add-ons
+- `confidenceScore` (number) - Confidence score for recommendation
 
 **Example Document**:
 
@@ -137,7 +145,7 @@
 
 **Quote Data**:
 
-- `formData` (object) - Complete project builder form data including all 8 sections:
+- `formData` (object) - Complete project builder form data including all sections:
 
   - Business information and type
   - Website requirements and features
@@ -148,6 +156,8 @@
   - Additional information and goals
 
 - `recommendedPackage` (string) - Package recommendation (static/dynamic/ecommerce)
+- `recommendedAddons` (array) - Recommended add-ons
+- `confidenceScore` (number) - Confidence score for recommendation
 - `totalPoints` (number) - Scoring points from the questionnaire
 - `quote` (object) - Calculated pricing information:
   - `package` (string) - Package type
@@ -159,8 +169,7 @@
 
 **Timestamps**:
 
-- `createdAt` (timestamp) - When the quote was created
-- `updatedAt` (timestamp) - Last modification timestamp
+- `createdAt` (timestamp) - When the quote was created (using new Date())
 
 **Example Document**:
 
@@ -184,6 +193,8 @@
     "budget": "Premium - Advanced features and custom design"
   },
   "recommendedPackage": "dynamic",
+  "recommendedAddons": ["Logo Design", "Live Chat"],
+  "confidenceScore": 100,
   "totalPoints": 8,
   "quote": {
     "package": "dynamic",
@@ -204,8 +215,7 @@
     ],
     "createdAt": "2024-01-15T10:30:00Z"
   },
-  "createdAt": "2024-01-15T10:30:00Z",
-  "updatedAt": "2024-01-15T10:30:00Z"
+  "createdAt": "2024-01-15T10:30:00Z"
 }
 ```
 
@@ -241,8 +251,8 @@
 
 **Timestamps**:
 
-- `createdAt` (timestamp) - When the ticket was created
-- `updatedAt` (timestamp) - Last modification timestamp
+- `createdAt` (timestamp) - When the ticket was created (using serverTimestamp())
+- `updatedAt` (timestamp) - Last modification timestamp (using serverTimestamp())
 
 **Example Document**:
 
@@ -287,6 +297,51 @@
 - Enables communication between clients and support team
 - Supports categorization and prioritization
 - Provides audit trail for support interactions
+- Referenced by ticketResponses collection for threaded conversations
+
+### ticketResponses Collection
+
+**Purpose**: Stores responses and replies to support tickets, enabling threaded conversations between clients and support team.
+
+**Collection Path**: `ticketResponses/{responseId}`
+
+**Fields**:
+
+**Response Information**:
+
+- `ticketId` (string) - Reference to the parent ticket document
+- `message` (string) - Response message content
+- `isAdmin` (boolean) - Whether the response is from admin/support team (false for client responses)
+
+**User Information**:
+
+- `userId` (string) - Firebase Auth user ID of the responder
+- `userEmail` (string) - User's email address
+
+**Timestamps**:
+
+- `createdAt` (timestamp) - When the response was created (using serverTimestamp())
+
+**Example Document**:
+
+```json
+{
+  "ticketId": "ticket_abc123",
+  "message": "Thank you for reporting this issue. We have identified the problem and are working on a fix. We'll update you once it's resolved.",
+  "isAdmin": true,
+  "userId": "admin123456789",
+  "userEmail": "support@website14.com",
+  "createdAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**Usage**:
+
+- Created when users or admins respond to support tickets
+- Used for threaded ticket conversations
+- Enables real-time communication between clients and support team
+- Provides complete conversation history for each ticket
+- Supports both client and admin responses
 
 ### users Collection
 
@@ -299,27 +354,47 @@
 **Profile Information**:
 
 - `name` (string) - User's full name
+- `firstName` (string) - User's first name (parsed from displayName or email)
+- `lastName` (string) - User's last name (parsed from displayName or email)
 - `email` (string) - User's email address
+- `secondaryEmail` (string) - User's secondary email address
+- `businessName` (string) - User's business name
+- `phoneNo` (string) - User's phone number
+- `whatsapp` (string) - User's WhatsApp number
+- `telegram` (string) - User's Telegram username
+- `discord` (string) - User's Discord username
+- `billingAddress` (string) - User's billing address
 - `role` (string) - User role (client/admin)
+- `status` (string) - User status (active/inactive)
 
 **Authentication Data**:
 
-- `uid` (string) - Firebase Auth user ID
-- `emailVerified` (boolean) - Whether email is verified
+- `uid` (string) - Firebase Auth user ID (document ID)
+- `emailVerified` (boolean) - Whether email is verified (from Firebase Auth)
 - `displayName` (string) - Display name from Firebase Auth
 
 **Timestamps**:
 
-- `createdAt` (timestamp) - Account creation timestamp
-- `updatedAt` (timestamp) - Last profile update timestamp
+- `createdAt` (timestamp) - Account creation timestamp (using new Date())
+- `updatedAt` (timestamp) - Last update timestamp (using new Date())
 
 **Example Document**:
 
 ```json
 {
   "name": "John Smith",
+  "firstName": "John",
+  "lastName": "Smith",
   "email": "john.smith@example.com",
+  "secondaryEmail": "john.business@example.com",
+  "businessName": "Smith's Restaurant",
+  "phoneNo": "+1234567890",
+  "whatsapp": "+1234567890",
+  "telegram": "johnsmith",
+  "discord": "johnsmith#1234",
+  "billingAddress": "123 Main St, New York, NY 10001",
   "role": "client",
+  "status": "active",
   "uid": "user123456789",
   "emailVerified": true,
   "displayName": "John Smith",
@@ -333,6 +408,11 @@
 - `client` - Regular user with access to client portal
 - `admin` - Administrator with access to admin portal
 
+**Statuses**:
+
+- `active` - User account is active and can access the system
+- `inactive` - User account is suspended or deactivated
+
 **Usage**:
 
 - Created when users register for an account
@@ -340,6 +420,10 @@
 - Controls access to different portal features
 - Stores user preferences and profile data
 - Enables role-based access control
+- Profile section in client portal allows users to update contact information
+- First name, last name, and email are pre-filled from Firebase Auth and cannot be edited
+- Additional contact fields (secondary email, business name, phone, social media, billing address) are editable
+- firstName and lastName fields are added during login if user document exists but these fields are missing
 
 ### pricing Collection
 
@@ -365,7 +449,7 @@
 
 - `extraPage` (number) - Cost per additional page
 - `extraProduct` (number) - Cost per additional product (e-commerce)
-- `paymentGateway` (number) - Cost per additional payment gateway
+- `extraPaymentGateway` (number) - Cost per additional payment gateway
 - `emailAccount` (number) - Cost per email account
 
 **Additional Features**:
@@ -380,6 +464,7 @@
 - `searchFunctionality` (number) - Cost for search functionality
 - `imageGallery` (number) - Cost for image gallery feature
 - `videoIntegration` (number) - Cost for video integration
+- `logoDesign` (number) - Cost for logo design service
 
 **Discount Percentages**:
 
@@ -418,7 +503,7 @@
   "ecommerceMonthly": 11,
   "extraPage": 3,
   "extraProduct": 0.2,
-  "paymentGateway": 5,
+  "extraPaymentGateway": 5,
   "emailAccount": 2.4,
   "contactForms": 2,
   "newsletterSignup": 2.5,
@@ -430,6 +515,7 @@
   "searchFunctionality": 2.5,
   "imageGallery": 2,
   "videoIntegration": 4,
+  "logoDesign": 15,
   "yearlyDiscount": 10,
   "twoYearDiscount": 15,
   "threeYearDiscount": 20,
@@ -458,7 +544,7 @@
 **Content Information**:
 
 - `title` (string) - Blog post title
-- `slug` (string) - URL-friendly slug for the post
+- `slug` (string) - URL-friendly slug for the post (auto-generated from title)
 - `excerpt` (string) - Short description/summary of the post
 - `content` (string) - Full blog post content (markdown supported)
 - `tags` (array) - Array of tags for categorization
@@ -466,16 +552,16 @@
 
 **SEO and Metadata**:
 
-- `metaDescription` (string) - Meta description for SEO
-- `metaKeywords` (string) - Meta keywords for SEO
-- `featuredImage` (string) - URL to featured image
-- `author` (string) - Author name
+- `seo` (object) - SEO metadata:
+  - `metaTitle` (string) - Meta title for SEO
+  - `metaDescription` (string) - Meta description for SEO
+  - `keywords` (string) - Meta keywords for SEO
 
 **Timestamps**:
 
-- `createdAt` (timestamp) - When the post was created
-- `updatedAt` (timestamp) - Last modification timestamp
-- `publishedAt` (timestamp) - When the post was published
+- `createdAt` (timestamp) - When the post was created (using new Date())
+- `updatedAt` (timestamp) - Last modification timestamp (using new Date())
+- `publishedAt` (timestamp) - When the post was published (null for drafts)
 
 **Example Document**:
 
@@ -487,10 +573,11 @@
   "content": "# 10 Essential Features Every Business Website Needs\n\nIn today's digital world...",
   "tags": ["web-design", "business", "features", "conversion"],
   "status": "published",
-  "metaDescription": "Learn about the 10 essential features every business website needs to succeed online and convert visitors into customers.",
-  "metaKeywords": "business website, web design, features, conversion, online business",
-  "featuredImage": "https://website14.com/images/essential-features.jpg",
-  "author": "Website14 Team",
+  "seo": {
+    "metaTitle": "10 Essential Features Every Business Website Needs",
+    "metaDescription": "Learn about the 10 essential features every business website needs to succeed online and convert visitors into customers.",
+    "keywords": "business website, web design, features, conversion, online business"
+  },
   "createdAt": "2024-01-15T10:30:00Z",
   "updatedAt": "2024-01-15T10:30:00Z",
   "publishedAt": "2024-01-15T10:30:00Z"
@@ -515,128 +602,242 @@
 
 **Project Information**:
 
-- `title` (string) - Project title
-- `status` (string) - Project status (active/completed/on-hold)
-- `clientId` (string) - Reference to client user
-- `orderId` (string) - Reference to associated order
+- `userId` (string) - Firebase Auth user ID of the client
+- `businessName` (string) - Business name for the project
+- `domain` (string) - Domain name for the website
+- `businessType` (string) - Type of business (e.g., "Restaurant", "E-commerce")
+- `selectedPackage` (string) - Package type (static/dynamic/ecommerce)
+- `status` (string) - Project status (pending/active/completed/on-hold)
 
 **Project Details**:
 
-- `industry` (string) - Industry type (restaurant/retail/healthcare/etc.)
-- `requirements` (string) - Project requirements and specifications
-- `timeline` (string) - Project timeline
-- `budget` (string) - Project budget range
+- `hostingDuration` (string) - Hosting duration (monthly/yearly/twoYear/threeYear)
+- `emailDuration` (string) - Email duration (monthly/yearly/twoYear/threeYear)
+- `emailAccountQuantity` (number) - Number of email accounts
+- `productCount` (string) - Number of products for e-commerce
+- `extraProducts` (number) - Additional products beyond package limit
+- `pagesNeeded` (array) - Array of required pages
+- `selectedPages` (array) - Array of selected pages
+- `customPages` (array) - Array of custom pages
+- `featuresNeeded` (array) - Array of required features
+- `addons` (array) - Array of selected add-ons
+- `reasoning` (string) - Reasoning for package recommendation
 
 **Quote Information**:
 
-- `quote` (object) - Associated quote data:
-  - `finalPrice` (number) - Final project price
-  - `currency` (string) - Currency code
-  - `package` (string) - Package type
+- `recommendedPackage` (string) - Recommended package type
+- `confidenceScore` (number) - Confidence score for recommendation
+- `reasoning` (string) - Reasoning for package recommendation
+- `setupFee` (number) - One-time setup fee
+- `monthlyFee` (number) - Monthly hosting fee
+- `hostingDiscount` (number) - Discount percentage for hosting
+- `emailDiscount` (number) - Discount percentage for email
+- `currency` (string) - Currency code
 
 **Timestamps**:
 
-- `timestamp` (timestamp) - Project creation timestamp
-- `lastUpdate` (timestamp) - Last update timestamp
+- `createdAt` (timestamp) - Project creation timestamp (using serverTimestamp())
+- `updatedAt` (timestamp) - Last update timestamp (using serverTimestamp())
 
 **Example Document**:
 
 ```json
 {
-  "title": "Restaurant Website with Online Ordering",
-  "status": "active",
-  "clientId": "user123456789",
-  "orderId": "order_abc123",
-  "industry": "restaurant",
-  "requirements": "Modern restaurant website with online ordering system, menu management, and payment processing",
-  "timeline": "3-4 weeks",
-  "budget": "Premium",
-  "quote": {
-    "finalPrice": 1200,
-    "currency": "USD",
-    "package": "dynamic"
-  },
-  "timestamp": "2024-01-15T10:30:00Z",
-  "lastUpdate": "2024-01-15T10:30:00Z"
+  "userId": "user123456789",
+  "businessName": "Smith's Restaurant",
+  "domain": "smithsrestaurant.com",
+  "businessType": "Restaurant",
+  "selectedPackage": "dynamic",
+  "status": "pending",
+  "hostingDuration": "yearly",
+  "emailDuration": "monthly",
+  "emailAccountQuantity": 3,
+  "productCount": "",
+  "extraProducts": 0,
+  "pagesNeeded": ["Home", "About", "Menu", "Contact"],
+  "selectedPages": ["Home", "About", "Menu", "Contact"],
+  "customPages": [],
+  "featuresNeeded": ["Contact Form", "Google Maps"],
+  "addons": ["Logo Design", "Live Chat"],
+  "recommendedPackage": "dynamic",
+  "confidenceScore": 100,
+  "reasoning": "Package selected by user: dynamic",
+  "setupFee": 135,
+  "monthlyFee": 7.2,
+  "hostingDiscount": 10,
+  "emailDiscount": 0,
+  "currency": "USD",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
 }
 ```
 
 **Usage**:
 
+- Created when clients submit new project requests
 - Used for project management and tracking
 - Referenced in admin dashboard for project oversight
 - Used in client portal for project status
 - Enables project lifecycle management
 
-## Planned Collections (Future Implementation)
-
-### orders Collection
-
-**Purpose**: Will store order information for the new order flow.
-
-**Collection Path**: `orders/{orderId}`
-
-**Planned Fields**:
-
-- `userId` (string) - Firebase Auth user ID
-- `orderNumber` (string) - Unique order number
-- `status` (string) - Order status (pending/paid/processing/completed/cancelled)
-- `services` (object) - Selected services and packages
-- `billing` (object) - Billing information and totals
-- `project` (object) - Project details and requirements
-- `payment` (object) - Payment method and status
-- `createdAt` (timestamp) - Order creation timestamp
-- `updatedAt` (timestamp) - Last update timestamp
-
-### payments Collection
-
-**Purpose**: Will store payment records for orders.
-
-**Collection Path**: `payments/{paymentId}`
-
-**Planned Fields**:
-
-- `orderId` (string) - Reference to associated order
-- `userId` (string) - Firebase Auth user ID
-- `amount` (number) - Payment amount
-- `currency` (string) - Currency code
-- `method` (string) - Payment method (paypal/manual/bank-transfer/cash/check)
-- `status` (string) - Payment status (pending/completed/failed/cancelled)
-- `transactionId` (string) - External transaction ID
-- `createdAt` (timestamp) - Payment creation timestamp
-- `completedAt` (timestamp) - Payment completion timestamp
-- `notes` (string) - Additional payment notes
-
 ### invoices Collection
 
-**Purpose**: Will store invoice information for billing.
+**Purpose**: Stores invoice information for billing and payment tracking.
 
 **Collection Path**: `invoices/{invoiceId}`
 
-**Planned Fields**:
+**Fields**:
 
-- `clientId` (string) - Reference to client
-- `amount` (number) - Invoice amount
-- `status` (string) - Invoice status
-- `date` (timestamp) - Invoice date
-- `paymentMethod` (string) - Payment method
-- `dueDate` (timestamp) - Payment due date
-- `items` (array) - Invoice line items
-- `billingType` (string) - Billing type (setup/monthly/addon)
-- `planType` (string) - Plan type (static/dynamic/ecommerce)
-- `addons` (object) - Additional services
+**Invoice Information**:
+
+- `projectId` (string) - Reference to the associated project
+- `userId` (string) - Firebase Auth user ID of the client
+- `userEmail` (string) - User's email address
+- `businessName` (string) - Business name for the project
+- `domain` (string) - Domain name for the website
+- `businessType` (string) - Type of business
+- `packageType` (string) - Package type (static/dynamic/ecommerce)
+- `status` (string) - Invoice status (pending/paid/overdue/cancelled)
+
+**Billing Details**:
+
+- `hostingDuration` (string) - Hosting duration (monthly/yearly/twoYear/threeYear)
+- `emailDuration` (string) - Email duration (monthly/yearly/twoYear/threeYear)
+- `emailAccountQuantity` (number) - Number of email accounts
+- `productCount` (string) - Number of products for e-commerce
+- `extraProducts` (number) - Additional products beyond package limit
+- `setupFee` (number) - One-time setup fee
+- `monthlyFee` (number) - Monthly hosting fee
+- `hostingDiscount` (number) - Discount percentage for hosting
+- `emailDiscount` (number) - Discount percentage for email
+- `addons` (array) - Array of selected add-ons
+- `addonCosts` (number) - Total cost of add-ons
+- `currency` (string) - Currency code
+- `projectId` (string) - Reference to the associated project
+
+**Payment Information**:
+
+- `invoiceNumber` (string) - Unique invoice number (format: INV-{timestamp})
+- `dueDate` (timestamp) - Payment due date (7 days from creation)
+
+**Timestamps**:
+
+- `createdAt` (timestamp) - Invoice creation timestamp (using serverTimestamp())
+- `updatedAt` (timestamp) - Last update timestamp (using serverTimestamp())
+
+**Example Document**:
+
+```json
+{
+  "projectId": "project_abc123",
+  "userId": "user123456789",
+  "userEmail": "john.smith@example.com",
+  "businessName": "Smith's Restaurant",
+  "domain": "smithsrestaurant.com",
+  "businessType": "Restaurant",
+  "packageType": "dynamic",
+  "status": "pending",
+  "hostingDuration": "yearly",
+  "emailDuration": "monthly",
+  "emailAccountQuantity": 3,
+  "productCount": "",
+  "extraProducts": 0,
+  "setupFee": 135,
+  "monthlyFee": 7.2,
+  "hostingDiscount": 10,
+  "emailDiscount": 0,
+  "addons": ["Logo Design", "Live Chat"],
+  "addonCosts": 20,
+  "currency": "USD",
+  "invoiceNumber": "INV-1705312200000",
+  "dueDate": "2024-01-22T10:30:00Z",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**Usage**:
+
+- Created automatically when a new project is submitted
+- Used for billing and payment tracking
+- Referenced in client portal for invoice management
+- Used in admin dashboard for financial tracking
+- Enables payment processing and status updates
+
+### notifications Collection
+
+**Purpose**: Stores notifications for admins about payment requests, system alerts, and other important events.
+
+**Collection Path**: `notifications/{notificationId}`
+
+**Fields**:
+
+**Notification Information**:
+
+- `type` (string) - Notification type (payment_request, system_alert, etc.)
+- `title` (string) - Notification title
+- `message` (string) - Detailed notification message
+- `status` (string) - Notification status (pending, read, resolved)
+- `read` (boolean) - Whether notification has been read by admin
+
+**Payment Request Fields** (for payment_request type):
+
+- `invoiceId` (string) - Reference to the associated invoice
+- `userId` (string) - Firebase Auth user ID of the client
+- `userEmail` (string) - User's email address
+- `businessName` (string) - Business name for the project
+- `invoiceNumber` (string) - Invoice number
+- `amount` (number) - Payment amount
+- `currency` (string) - Currency code
+- `paymentMethod` (string) - Payment method (paypal, other)
+
+**Timestamps**:
+
+- `createdAt` (timestamp) - Notification creation timestamp
+- `updatedAt` (timestamp) - Last update timestamp
+
+**Example Document**:
+
+```json
+{
+  "type": "payment_request",
+  "title": "PayPal Payment Request",
+  "message": "Client Smith's Restaurant (john.smith@example.com) has requested PayPal payment for invoice INV-1705312200000. Amount: $142.20",
+  "invoiceId": "invoice_abc123",
+  "userId": "user123456789",
+  "userEmail": "john.smith@example.com",
+  "businessName": "Smith's Restaurant",
+  "invoiceNumber": "INV-1705312200000",
+  "amount": 142.2,
+  "currency": "USD",
+  "paymentMethod": "paypal",
+  "status": "pending",
+  "read": false,
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**Usage**:
+
+- Created when clients request payments through the billing portal
+- Used by admin dashboard for payment request management
+- Enables admin notification system for payment tracking
+- Supports different notification types for system alerts
 
 ## Security Rules
 
 **Access Control**:
 
-- **leads**: Only authenticated users can create, admins can read/write all
+- **leads**: Only authenticated users can create, users can read their own leads, admins can read/write all
 - **quotes**: Users can read their own quotes, admins can read/write all
 - **tickets**: Users can read/create their own tickets, admins can read/write all
 - **users**: Users can read/write their own data, admins can read all
-- **pricing**: Read-only for all authenticated users, write access for admins only
+- **pricing**: Read-only for all users, write access for admins only
 - **blog**: Read access for all users, write access for admins only
 - **projects**: Users can read their own projects, admins can read/write all
+- **invoices**: Users can read their own invoices, admins can read/write all
+- **notifications**: Users can create notifications, admins can read/write all
 
 **Authentication Requirements**:
 
@@ -653,19 +854,26 @@
 - `users` ←→ `leads` (One-to-Many)
 - `users` ←→ `tickets` (One-to-Many)
 - `users` ←→ `projects` (One-to-Many)
+- `users` ←→ `invoices` (One-to-Many)
+- `users` ←→ `notifications` (One-to-Many)
 - `leads` ←→ `quotes` (One-to-One)
-- `orders` ←→ `payments` (One-to-Many) [Future]
-- `orders` ←→ `projects` (One-to-One) [Future]
+- `projects` ←→ `invoices` (One-to-One)
+- `invoices` ←→ `notifications` (One-to-Many)
+- `tickets` ←→ `ticketResponses` (One-to-Many)
 
 **Query Patterns**:
 
 - Get user's quotes: `quotes?userId={uid}`
 - Get user's leads: `leads?userId={uid}`
 - Get user's tickets: `tickets?userId={uid}`
-- Get user's projects: `projects?clientId={uid}`
+- Get user's projects: `projects?userId={uid}`
+- Get user's invoices: `invoices?userId={uid}`
+- Get admin notifications: `notifications?read=false`
+- Get notifications by type: `notifications?type=payment_request`
 - Get leads by status: `leads?status=new`
 - Get pricing by currency: `pricing/{currency}`
 - Get published blog posts: `blog?status=published`
+- Get ticket responses: `ticketResponses?ticketId={ticketId}`
 
 ## Indexing Strategy
 
@@ -674,9 +882,13 @@
 - `quotes` collection: `userId` + `createdAt` (composite)
 - `leads` collection: `userId` + `createdAt` (composite)
 - `tickets` collection: `userId` + `createdAt` (composite)
+- `projects` collection: `userId` + `createdAt` (composite)
+- `invoices` collection: `userId` + `createdAt` (composite)
+- `notifications` collection: `read` + `createdAt` (composite)
+- `notifications` collection: `type` + `createdAt` (composite)
 - `leads` collection: `status` + `createdAt` (composite)
 - `blog` collection: `status` + `publishedAt` (composite)
-- `projects` collection: `clientId` + `timestamp` (composite)
+- `ticketResponses` collection: `ticketId` + `createdAt` (composite)
 
 **Performance Considerations**:
 
@@ -685,3 +897,32 @@
 - Timestamp-based queries for chronological ordering
 - User-specific queries for data isolation
 - Blog posts use static generation for better performance
+
+## Timestamp Implementation Notes
+
+**Server Timestamps** (using serverTimestamp()):
+
+- `leads.timestamp` - Server-generated timestamp for lead creation
+- `tickets.createdAt` - Server-generated timestamp for ticket creation
+- `tickets.updatedAt` - Server-generated timestamp for ticket updates
+- `projects.createdAt` - Server-generated timestamp for project creation
+- `projects.updatedAt` - Server-generated timestamp for project updates
+- `invoices.createdAt` - Server-generated timestamp for invoice creation
+- `invoices.updatedAt` - Server-generated timestamp for invoice updates
+- `ticketResponses.createdAt` - Server-generated timestamp for response creation
+
+**Client Timestamps** (using new Date()):
+
+- `quotes.createdAt` - Client-generated timestamp for quote creation
+- `users.createdAt` - Client-generated timestamp for user creation
+- `users.updatedAt` - Client-generated timestamp for user updates
+- `blog.createdAt` - Client-generated timestamp for blog post creation
+- `blog.updatedAt` - Client-generated timestamp for blog post updates
+- `blog.publishedAt` - Client-generated timestamp for blog post publication
+
+**Best Practices**:
+
+- Use serverTimestamp() for critical audit trails (leads, tickets, projects, invoices)
+- Use new Date() for user-generated content (quotes, users, blog posts)
+- Server timestamps are more reliable for chronological ordering
+- Client timestamps are suitable for user-facing content

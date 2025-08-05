@@ -1,12 +1,15 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { auth } from '../lib/firebase';
 import { useLocation } from '../hooks/useLocation';
 import { usePricing } from '../hooks/usePricing';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function Services() {
+  const router = useRouter();
   // State for manual currency selection
   const [selectedCurrency, setSelectedCurrency] = useState(null);
 
@@ -24,6 +27,19 @@ export default function Services() {
 
   // Combined loading state
   const isLoading = locationLoading || pricingLoading;
+
+  // Handle package selection and redirect
+  const handlePackageSelection = (packageType) => {
+    const user = auth.currentUser;
+
+    if (user) {
+      // User is logged in, redirect to client portal projects with package pre-selected
+      router.push(`/client?section=projects&package=${packageType}`);
+    } else {
+      // User is not logged in, redirect to login with return URL to client portal projects
+      router.push(`/login?returnUrl=${encodeURIComponent(`/client?section=projects&package=${packageType}`)}`);
+    }
+  };
 
   // Default USD pricing for SEO and fallback
   const defaultPricing = {
@@ -44,7 +60,8 @@ export default function Services() {
       multiLanguageSupport: 8,
       searchFunctionality: 2.5,
       imageGallery: 2,
-      videoIntegration: 4
+      videoIntegration: 4,
+      logoDesign: 15
     },
     discounts: {
       yearly: 10,
@@ -280,7 +297,8 @@ export default function Services() {
         multiLanguageSupport: pricingData?.multiLanguageSupport !== undefined ? pricingData.multiLanguageSupport : defaultPricing.addons.multiLanguageSupport,
         searchFunctionality: pricingData?.searchFunctionality !== undefined ? pricingData.searchFunctionality : defaultPricing.addons.searchFunctionality,
         imageGallery: pricingData?.imageGallery !== undefined ? pricingData.imageGallery : defaultPricing.addons.imageGallery,
-        videoIntegration: pricingData?.videoIntegration !== undefined ? pricingData.videoIntegration : defaultPricing.addons.videoIntegration
+        videoIntegration: pricingData?.videoIntegration !== undefined ? pricingData.videoIntegration : defaultPricing.addons.videoIntegration,
+        logoDesign: pricingData?.logoDesign !== undefined ? pricingData.logoDesign : defaultPricing.addons.logoDesign
       },
       discounts: {
         yearly: pricingData?.yearlyDiscount !== undefined ? pricingData.yearlyDiscount : defaultPricing.discounts.yearly,
@@ -362,11 +380,12 @@ export default function Services() {
                   Unlimited updates included
                 </div>
               </div>
-              <Link href="/order">
-                <button className="bg-black text-white py-4 px-8 rounded-lg font-medium hover:bg-gray-800 transition-all duration-300 text-lg">
-                  Get Your Free Quote Now
-                </button>
-              </Link>
+              <button
+                onClick={() => handlePackageSelection('dynamicSetup')}
+                className="bg-black text-white py-4 px-8 rounded-lg font-medium hover:bg-gray-800 transition-all duration-300 text-lg"
+              >
+                Get Your Free Quote Now
+              </button>
             </div>
 
             {/* Floating Currency Selector */}
@@ -474,11 +493,12 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/order?package=staticSetup">
-                  <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
-                    Start Your Website
-                  </button>
-                </Link>
+                <button
+                  onClick={() => handlePackageSelection('staticSetup')}
+                  className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3"
+                >
+                  Start Your Website
+                </button>
                 <p className="text-xs text-gray-500 text-center">Free consultation included</p>
               </div>
 
@@ -545,11 +565,12 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/order?package=dynamicSetup">
-                  <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
-                    Start Your Website
-                  </button>
-                </Link>
+                <button
+                  onClick={() => handlePackageSelection('dynamicSetup')}
+                  className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3"
+                >
+                  Start Your Website
+                </button>
                 <p className="text-xs text-gray-500 text-center">Free consultation included</p>
               </div>
 
@@ -614,11 +635,12 @@ export default function Services() {
                   </li>
                 </ul>
 
-                <Link href="/order?package=ecommerceSetup">
-                  <button className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3">
-                    Start Your Store
-                  </button>
-                </Link>
+                <button
+                  onClick={() => handlePackageSelection('ecommerceSetup')}
+                  className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 mb-3"
+                >
+                  Start Your Store
+                </button>
                 <p className="text-xs text-gray-500 text-center">Free consultation included</p>
               </div>
             </div>
@@ -937,6 +959,10 @@ export default function Services() {
                         <span>Video Integration</span>
                         <span>{formatPrice(currentPricing.addons.videoIntegration, currentPricing.currency)}</span>
                       </div>
+                      <div className="flex justify-between">
+                        <span>Logo Design</span>
+                        <span>{formatPrice(currentPricing.addons.logoDesign, currentPricing.currency)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1014,6 +1040,10 @@ export default function Services() {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-700">Video Integration</span>
                         <span className="font-semibold text-purple-600">{formatPrice(currentPricing.addons.videoIntegration, currentPricing.currency)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Logo Design</span>
+                        <span className="font-semibold text-purple-600">{formatPrice(currentPricing.addons.logoDesign, currentPricing.currency)}</span>
                       </div>
                     </div>
                   </div>
@@ -1291,11 +1321,12 @@ export default function Services() {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/order">
-                    <button className="bg-white text-blue-600 py-4 px-8 rounded-lg font-medium hover:bg-gray-100 transition-all duration-300 text-lg">
-                      Get Your Free Quote
-                    </button>
-                  </Link>
+                  <button
+                    onClick={() => handlePackageSelection('dynamicSetup')}
+                    className="bg-white text-blue-600 py-4 px-8 rounded-lg font-medium hover:bg-gray-100 transition-all duration-300 text-lg"
+                  >
+                    Get Your Free Quote
+                  </button>
                   <Link href="/contact">
                     <button className="border-2 border-white text-white py-4 px-8 rounded-lg font-medium hover:bg-gray-100 transition-all duration-300 text-lg">
                       Talk to Our Team

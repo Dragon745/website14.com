@@ -7,6 +7,13 @@ import { collection, query, where, getDocs, getDoc, doc, orderBy, limit, addDoc,
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import ClientNav from '../../components/ClientNav';
+import { useLocation } from '../../hooks/useLocation';
+import { usePricing } from '../../hooks/usePricing';
+import Dashboard from '../../components/Dashboard';
+import Projects from '../../components/Projects';
+import Support from '../../components/Support';
+import Billing from '../../components/Billing';
+import Profile from '../../components/Profile';
 
 export default function ClientPortal() {
     const [user, setUser] = useState(null);
@@ -15,8 +22,11 @@ export default function ClientPortal() {
     const [quotes, setQuotes] = useState([]);
     const [leads, setLeads] = useState([]);
     const [tickets, setTickets] = useState([]);
+    const [projects, setProjects] = useState([]);
+    const [invoices, setInvoices] = useState([]);
     const [activeSection, setActiveSection] = useState('dashboard');
     const [showNewTicket, setShowNewTicket] = useState(false);
+    const [selectedTicket, setSelectedTicket] = useState(null);
     const [newTicket, setNewTicket] = useState({
         subject: '',
         message: '',
@@ -25,6 +35,32 @@ export default function ClientPortal() {
     });
     const [submitting, setSubmitting] = useState(false);
     const router = useRouter();
+
+    // Project creation states
+    const [showProjectForm, setShowProjectForm] = useState(false);
+    const [projectData, setProjectData] = useState({
+        businessName: '',
+        domain: '',
+        businessType: '',
+        package: '',
+        hostingDuration: 'monthly',
+        emailDuration: 'monthly',
+        emailAccountQuantity: 1,
+        productCount: '',
+        extraProducts: 0,
+        pagesNeeded: [],
+        selectedPages: [],
+        customPages: [],
+        featuresNeeded: [],
+        addons: []
+    });
+    const [selectedCurrency, setSelectedCurrency] = useState(null);
+    const [isCreatingProject, setIsCreatingProject] = useState(false);
+
+    // Use location and pricing hooks
+    const { location: userLocation, isLoading: locationLoading } = useLocation();
+    const effectiveCurrency = selectedCurrency || userLocation?.currency;
+    const { pricingData, isLoading: pricingLoading } = usePricing(effectiveCurrency);
 
     useEffect(() => {
         console.log('ClientPortal: useEffect started');
@@ -37,6 +73,8 @@ export default function ClientPortal() {
                 await fetchUserQuotes(user.uid);
                 await fetchUserLeads(user.uid);
                 await fetchUserTickets(user.uid);
+                await fetchUserProjects(user.uid);
+                await fetchUserInvoices(user.uid);
             } else {
                 console.log('ClientPortal: No user, redirecting to login');
                 router.push('/login');
@@ -46,6 +84,28 @@ export default function ClientPortal() {
 
         return () => unsubscribe();
     }, [router]);
+
+    // Handle URL parameters for section and package
+    useEffect(() => {
+        if (router.query.section) {
+            setActiveSection(router.query.section);
+        }
+
+        if (router.query.package && !showProjectForm) {
+            setShowProjectForm(true);
+            setActiveSection('projects');
+
+            // Pre-select package based on URL parameter
+            const packageType = router.query.package;
+            if (packageType === 'staticSetup') {
+                setProjectData(prev => ({ ...prev, package: 'static' }));
+            } else if (packageType === 'dynamicSetup') {
+                setProjectData(prev => ({ ...prev, package: 'dynamic' }));
+            } else if (packageType === 'ecommerceSetup') {
+                setProjectData(prev => ({ ...prev, package: 'ecommerce' }));
+            }
+        }
+    }, [router.query, showProjectForm]);
 
     const fetchUserData = async (userId) => {
         console.log('ClientPortal: Fetching user data for', userId);
@@ -122,6 +182,77 @@ export default function ClientPortal() {
         }
     };
 
+    const fetchUserProjects = async (userId) => {
+        console.log('ClientPortal: Fetching projects for', userId);
+        try {
+            const q = query(
+                collection(db, 'projects'),
+                where('userId', '==', userId),
+                orderBy('createdAt', 'desc')
+            );
+            const querySnapshot = await getDocs(q);
+            const projectsData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            console.log('ClientPortal: Found projects', projectsData.length);
+            console.log('ClientPortal: Projects data:', projectsData);
+            setProjects(projectsData);
+        } catch (error) {
+            console.error('Error fetching projects:', error);
+        }
+    };
+
+    const fetchUserInvoices = async (userId) => {
+        console.log('ClientPortal: Fetching invoices for', userId);
+        try {
+            // Try the user-specific query without orderBy first to avoid index issues
+            console.log('ClientPortal: Trying user-specific query without orderBy...');
+            const q = query(
+                collection(db, 'invoices'),
+                where('userId', '==', userId)
+            );
+            const querySnapshot = await getDocs(q);
+            const invoicesData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Sort client-side to avoid index requirements
+            invoicesData.sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+                return dateB - dateA; // Descending order
+            });
+
+            console.log('ClientPortal: Found invoices', invoicesData.length);
+            console.log('ClientPortal: Invoices data:', invoicesData);
+            setInvoices(invoicesData);
+        } catch (error) {
+            console.error('Error fetching invoices:', error);
+            // Try getting all invoices and filter client-side
+            try {
+                console.log('ClientPortal: Trying to get all invoices and filter...');
+                const allInvoicesQuery = query(collection(db, 'invoices'));
+                const allInvoicesSnapshot = await getDocs(allInvoicesQuery);
+                const allInvoicesData = allInvoicesSnapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(invoice => invoice.userId === userId)
+                    .sort((a, b) => {
+                        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+                        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+                        return dateB - dateA; // Descending order
+                    });
+                console.log('ClientPortal: Found invoices (filtered client-side):', allInvoicesData.length);
+                console.log('ClientPortal: Invoices data (filtered):', allInvoicesData);
+                setInvoices(allInvoicesData);
+            } catch (error2) {
+                console.error('Error fetching all invoices:', error2);
+                setInvoices([]);
+            }
+        }
+    };
+
     const handleSubmitTicket = async (e) => {
         e.preventDefault();
         if (!user) return;
@@ -156,6 +287,286 @@ export default function ClientPortal() {
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleProjectSubmit = async (e) => {
+        e.preventDefault();
+        if (!user) return;
+
+        setIsCreatingProject(true);
+        try {
+            // Use the selected package directly
+            const selectedPackage = projectData.package;
+            let confidenceScore = 100;
+            let reasoning = `Package selected by user: ${selectedPackage}`;
+
+            // Calculate pricing
+            const pricing = getCurrentPricing();
+            let setupFee = 0;
+            let monthlyFee = 0;
+            let hostingDiscount = 0;
+
+            switch (selectedPackage) {
+                case 'static':
+                    setupFee = pricing.static.setup;
+                    monthlyFee = pricing.static.monthly;
+                    break;
+                case 'dynamic':
+                    setupFee = pricing.dynamic.setup;
+                    monthlyFee = pricing.dynamic.monthly;
+                    break;
+                case 'ecommerce':
+                    setupFee = pricing.ecommerce.setup;
+                    monthlyFee = pricing.ecommerce.monthly;
+                    break;
+                default:
+                    setupFee = pricing.static.setup;
+                    monthlyFee = pricing.static.monthly;
+                    break;
+            }
+
+            // Calculate hosting discount based on duration
+            switch (projectData.hostingDuration) {
+                case 'yearly':
+                    hostingDiscount = pricing.discounts.yearly;
+                    break;
+                case 'twoYear':
+                    hostingDiscount = pricing.discounts.twoYear;
+                    break;
+                case 'threeYear':
+                    hostingDiscount = pricing.discounts.threeYear;
+                    break;
+                default:
+                    hostingDiscount = 0;
+                    break;
+            }
+
+            // Calculate add-on costs
+            let addonCosts = 0;
+            let emailDiscount = 0;
+
+            // Calculate email discount based on duration
+            switch (projectData.emailDuration) {
+                case 'yearly':
+                    emailDiscount = pricing.discounts.yearly;
+                    break;
+                case 'twoYear':
+                    emailDiscount = pricing.discounts.twoYear;
+                    break;
+                case 'threeYear':
+                    emailDiscount = pricing.discounts.threeYear;
+                    break;
+                default:
+                    emailDiscount = 0;
+                    break;
+            }
+
+            projectData.addons.forEach((addon) => {
+                switch (addon) {
+                    case 'Logo Design':
+                        addonCosts += pricing.addons.logoDesign || 15;
+                        break;
+                    case 'Extra Pages':
+                        // Calculate cost based on custom pages
+                        const extraPagesCount = projectData.customPages.length;
+                        addonCosts += extraPagesCount * (pricing.addons.extraPage || 3);
+                        break;
+                    case 'Extra Products':
+                        addonCosts += projectData.extraProducts * (pricing.addons.extraProduct || 0.2);
+                        break;
+                    case 'Extra Payment Gateway':
+                        addonCosts += pricing.addons.extraPaymentGateway || 5;
+                        break;
+                    case 'Email Account':
+                        const emailBaseCost = pricing.addons.emailAccount || 2.4;
+                        const emailCost = emailDiscount > 0 ?
+                            emailBaseCost * (1 - emailDiscount / 100) : emailBaseCost;
+                        addonCosts += emailCost * projectData.emailAccountQuantity;
+                        break;
+                    case 'Live Chat':
+                        addonCosts += pricing.addons.liveChat || 5;
+                        break;
+                    case 'Multi-language Support':
+                        addonCosts += pricing.addons.multiLanguageSupport || 8;
+                        break;
+                    case 'Search Functionality':
+                        addonCosts += pricing.addons.searchFunctionality || 2.5;
+                        break;
+                    default:
+                        addonCosts += 0;
+                }
+            });
+
+            // Create project document
+            const projectDoc = {
+                userId: user.uid,
+                businessName: projectData.businessName,
+                domain: projectData.domain,
+                businessType: projectData.businessType,
+                selectedPackage: selectedPackage,
+                hostingDuration: projectData.hostingDuration,
+                emailDuration: projectData.emailDuration,
+                emailAccountQuantity: projectData.emailAccountQuantity,
+                productCount: projectData.productCount,
+                extraProducts: projectData.extraProducts,
+                pagesNeeded: projectData.pagesNeeded,
+                selectedPages: projectData.selectedPages,
+                customPages: projectData.customPages,
+                featuresNeeded: projectData.featuresNeeded,
+                addons: projectData.addons,
+                recommendedPackage: selectedPackage,
+                confidenceScore,
+                reasoning,
+                setupFee: setupFee + addonCosts,
+                monthlyFee,
+                hostingDiscount,
+                emailDiscount,
+                currency: effectiveCurrency || 'USD',
+                status: 'pending',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            };
+
+            const projectRef = await addDoc(collection(db, 'projects'), projectDoc);
+
+            // Create invoice
+            const invoiceDoc = {
+                projectId: projectRef.id,
+                userId: user.uid,
+                userEmail: user.email,
+                businessName: projectData.businessName,
+                domain: projectData.domain,
+                businessType: projectData.businessType,
+                packageType: selectedPackage,
+                hostingDuration: projectData.hostingDuration,
+                emailDuration: projectData.emailDuration,
+                emailAccountQuantity: projectData.emailAccountQuantity,
+                productCount: projectData.productCount,
+                extraProducts: projectData.extraProducts,
+                setupFee: setupFee + addonCosts,
+                monthlyFee,
+                hostingDiscount,
+                emailDiscount,
+                addons: projectData.addons,
+                addonCosts,
+                currency: effectiveCurrency || 'USD',
+                status: 'pending',
+                invoiceNumber: `INV-${Date.now()}`,
+                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            };
+
+            await addDoc(collection(db, 'invoices'), invoiceDoc);
+
+            // Reset form and show success
+            setProjectData({
+                businessName: '',
+                domain: '',
+                businessType: '',
+                package: '',
+                hostingDuration: 'monthly',
+                emailDuration: 'monthly',
+                emailAccountQuantity: 1,
+                productCount: '',
+                extraProducts: 0,
+                pagesNeeded: [],
+                selectedPages: [],
+                customPages: [],
+                featuresNeeded: [],
+                addons: []
+            });
+            setShowProjectForm(false);
+            setIsCreatingProject(false);
+
+            // Refresh projects and invoices list
+            await fetchUserProjects(user.uid);
+            await fetchUserInvoices(user.uid);
+
+            alert('Project created successfully! Invoice has been generated.');
+
+        } catch (error) {
+            console.error('Error creating project:', error);
+            alert('Failed to create project. Please try again.');
+            setIsCreatingProject(false);
+        }
+    };
+
+    const getCurrentPricing = () => {
+        const defaultPricing = {
+            static: { setup: 59, monthly: 5 },
+            dynamic: { setup: 120, monthly: 7.2 },
+            ecommerce: { setup: 180, monthly: 11 },
+            addons: {
+                extraPage: 3,
+                extraProduct: 0.2,
+                extraPaymentGateway: 5,
+                emailAccount: 2.4,
+                contactForms: 2,
+                newsletterSignup: 2.5,
+                socialMediaIntegration: 4,
+                googleMapsIntegration: 3,
+                bookingAppointmentSystem: 10,
+                liveChat: 5,
+                multiLanguageSupport: 8,
+                searchFunctionality: 2.5,
+                imageGallery: 2,
+                videoIntegration: 4,
+                logoDesign: 15
+            },
+            discounts: {
+                yearly: 10,
+                twoYear: 15,
+                threeYear: 20
+            }
+        };
+
+        return {
+            static: {
+                setup: pricingData?.staticSetup !== undefined ? pricingData.staticSetup : defaultPricing.static.setup,
+                monthly: pricingData?.staticMonthly !== undefined ? pricingData.staticMonthly : defaultPricing.static.monthly
+            },
+            dynamic: {
+                setup: pricingData?.dynamicSetup !== undefined ? pricingData.dynamicSetup : defaultPricing.dynamic.setup,
+                monthly: pricingData?.dynamicMonthly !== undefined ? pricingData.dynamicMonthly : defaultPricing.dynamic.monthly
+            },
+            ecommerce: {
+                setup: pricingData?.ecommerceSetup !== undefined ? pricingData.ecommerceSetup : defaultPricing.ecommerce.setup,
+                monthly: pricingData?.ecommerceMonthly !== undefined ? pricingData.ecommerceMonthly : defaultPricing.ecommerce.monthly
+            },
+            addons: {
+                extraPage: pricingData?.extraPage !== undefined ? pricingData.extraPage : defaultPricing.addons.extraPage,
+                extraProduct: pricingData?.extraProduct !== undefined ? pricingData.extraProduct : defaultPricing.addons.extraProduct,
+                extraPaymentGateway: pricingData?.extraPaymentGateway !== undefined ? pricingData.extraPaymentGateway : defaultPricing.addons.extraPaymentGateway,
+                emailAccount: pricingData?.emailAccount !== undefined ? pricingData.emailAccount : defaultPricing.addons.emailAccount,
+                contactForms: pricingData?.contactForms !== undefined ? pricingData.contactForms : defaultPricing.addons.contactForms,
+                newsletterSignup: pricingData?.newsletterSignup !== undefined ? pricingData.newsletterSignup : defaultPricing.addons.newsletterSignup,
+                socialMediaIntegration: pricingData?.socialMediaIntegration !== undefined ? pricingData.socialMediaIntegration : defaultPricing.addons.socialMediaIntegration,
+                googleMapsIntegration: pricingData?.googleMapsIntegration !== undefined ? pricingData.googleMapsIntegration : defaultPricing.addons.googleMapsIntegration,
+                bookingAppointmentSystem: pricingData?.bookingAppointmentSystem !== undefined ? pricingData.bookingAppointmentSystem : defaultPricing.addons.bookingAppointmentSystem,
+                liveChat: pricingData?.liveChat !== undefined ? pricingData.liveChat : defaultPricing.addons.liveChat,
+                multiLanguageSupport: pricingData?.multiLanguageSupport !== undefined ? pricingData.multiLanguageSupport : defaultPricing.addons.multiLanguageSupport,
+                searchFunctionality: pricingData?.searchFunctionality !== undefined ? pricingData.searchFunctionality : defaultPricing.addons.searchFunctionality,
+                imageGallery: pricingData?.imageGallery !== undefined ? pricingData.imageGallery : defaultPricing.addons.imageGallery,
+                videoIntegration: pricingData?.videoIntegration !== undefined ? pricingData.videoIntegration : defaultPricing.addons.videoIntegration,
+                logoDesign: pricingData?.logoDesign !== undefined ? pricingData.logoDesign : defaultPricing.addons.logoDesign
+            },
+            discounts: {
+                yearly: pricingData?.yearlyDiscount !== undefined ? pricingData.yearlyDiscount : defaultPricing.discounts.yearly,
+                twoYear: pricingData?.twoYearDiscount !== undefined ? pricingData.twoYearDiscount : defaultPricing.discounts.twoYear,
+                threeYear: pricingData?.threeYearDiscount !== undefined ? pricingData.threeYearDiscount : defaultPricing.discounts.threeYear
+            },
+            currency: effectiveCurrency || 'USD'
+        };
+    };
+
+    const formatPrice = (price, currency = 'USD') => {
+        const symbols = {
+            USD: '$', INR: '₹', CAD: 'C$', EUR: '€', GBP: '£',
+            SAR: 'SAR ', AED: 'AED ', QAR: 'QAR ', KWD: 'KWD ', BHD: 'BHD ', OMR: 'OMR '
+        };
+        const symbol = symbols[currency] || '$';
+        return `${symbol}${price.toFixed(2)}`;
     };
 
     const formatDate = (timestamp) => {
@@ -267,7 +678,8 @@ export default function ClientPortal() {
                                 { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
                                 { id: 'projects', label: 'Projects', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
                                 { id: 'support', label: 'Support', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-                                { id: 'billing', label: 'Billing', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' }
+                                { id: 'billing', label: 'Billing', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
+                                { id: 'profile', label: 'Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' }
                             ].map((item) => (
                                 <button
                                     key={item.id}
@@ -291,448 +703,87 @@ export default function ClientPortal() {
                     <div className="max-w-6xl mx-auto px-5">
                         {/* Dashboard Section */}
                         {activeSection === 'dashboard' && (
-                            <div className="animate-fadeIn">
-                                {/* Header */}
-                                <div className="mb-8">
-                                    <h1 className="font-jetbrains text-4xl font-bold text-black mb-2">
-                                        Welcome back, {userData?.name || user.email}!
-                                    </h1>
-                                    <p className="text-gray-600">
-                                        Manage your website projects and view your quotes
-                                    </p>
-                                </div>
-
-                                {/* Quick Actions */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                                    <button
-                                        onClick={() => window.open('/builder', '_blank')}
-                                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
-                                    >
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-black">New Project</h3>
-                                                <p className="text-sm text-gray-600">Start a new website project</p>
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        onClick={() => setActiveSection('support')}
-                                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
-                                    >
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-black">Support Tickets</h3>
-                                                <p className="text-sm text-gray-600">Create and manage tickets</p>
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        onClick={() => setActiveSection('projects')}
-                                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
-                                    >
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-black">Project Management</h3>
-                                                <p className="text-sm text-gray-600">Track project progress</p>
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        onClick={() => setActiveSection('billing')}
-                                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
-                                    >
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-black">Billing</h3>
-                                                <p className="text-sm text-gray-600">View invoices and payments</p>
-                                            </div>
-                                        </div>
-                                    </button>
-                                </div>
-
-                                {/* Recent Quotes */}
-                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-                                    <h2 className="text-2xl font-bold text-black mb-4">Recent Quotes</h2>
-                                    {quotes.length > 0 ? (
-                                        <div className="space-y-4">
-                                            {quotes.map((quote) => (
-                                                <div key={quote.id} className="border border-gray-200 rounded-lg p-4">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <h3 className="font-semibold text-black">
-                                                                {getPackageName(quote.recommendedPackage)}
-                                                            </h3>
-                                                            <p className="text-sm text-gray-600">
-                                                                Created: {formatDate(quote.createdAt)}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                Business: {quote.formData?.businessType || 'N/A'}
-                                                            </p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="font-semibold text-black">
-                                                                {formatCurrency(quote.quote?.setupFee || 0, quote.quote?.currency || 'USD')}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                Setup Fee
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-8">
-                                            <p className="text-gray-600 mb-4">No quotes yet</p>
-                                            <Link
-                                                href="/builder"
-                                                className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-                                            >
-                                                Get Your First Quote
-                                            </Link>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Recent Leads */}
-                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                                    <h2 className="text-2xl font-bold text-black mb-4">Recent Inquiries</h2>
-                                    {leads.length > 0 ? (
-                                        <div className="space-y-4">
-                                            {leads.map((lead) => (
-                                                <div key={lead.id} className="border border-gray-200 rounded-lg p-4">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <h3 className="font-semibold text-black">
-                                                                {lead.industry || 'General Inquiry'}
-                                                            </h3>
-                                                            <p className="text-sm text-gray-600">
-                                                                Submitted: {formatDate(lead.createdAt)}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                Status: <span className="capitalize">{lead.status}</span>
-                                                            </p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${lead.status === 'new' ? 'bg-blue-100 text-blue-800' :
-                                                                lead.status === 'contacted' ? 'bg-yellow-100 text-yellow-800' :
-                                                                    lead.status === 'qualified' ? 'bg-green-100 text-green-800' :
-                                                                        'bg-gray-100 text-gray-800'
-                                                                }`}>
-                                                                {lead.status}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-8">
-                                            <p className="text-gray-600 mb-4">No inquiries yet</p>
-                                            <Link
-                                                href="/contact"
-                                                className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-                                            >
-                                                Contact Us
-                                            </Link>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <Dashboard
+                                userData={userData}
+                                user={user}
+                                projects={projects}
+                                invoices={invoices}
+                                tickets={tickets}
+                                formatDate={formatDate}
+                                formatCurrency={formatCurrency}
+                                getPackageName={getPackageName}
+                                getPriorityColor={getPriorityColor}
+                                getStatusColor={getStatusColor}
+                                getCategoryName={getCategoryName}
+                                setActiveSection={setActiveSection}
+                            />
                         )}
 
                         {/* Projects Section */}
                         {activeSection === 'projects' && (
-                            <div className="animate-fadeIn">
-                                <div className="mb-8">
-                                    <h1 className="font-jetbrains text-4xl font-bold text-black mb-2">
-                                        Project Management
-                                    </h1>
-                                    <p className="text-gray-600">
-                                        Track the progress of your website projects
-                                    </p>
-                                </div>
-
-                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                                    <div className="text-center py-12">
-                                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="text-lg font-semibold text-black mb-2">Project Management Coming Soon</h3>
-                                        <p className="text-gray-600 mb-6">We're working on bringing you detailed project tracking and management features.</p>
-                                        <button
-                                            onClick={() => window.open('/builder', '_blank')}
-                                            className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-                                        >
-                                            Start New Project
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                            <Projects
+                                showProjectForm={showProjectForm}
+                                setShowProjectForm={setShowProjectForm}
+                                projectData={projectData}
+                                setProjectData={setProjectData}
+                                selectedCurrency={selectedCurrency}
+                                setSelectedCurrency={setSelectedCurrency}
+                                userLocation={userLocation}
+                                effectiveCurrency={effectiveCurrency}
+                                getCurrentPricing={getCurrentPricing}
+                                formatPrice={formatPrice}
+                                isCreatingProject={isCreatingProject}
+                                handleProjectSubmit={handleProjectSubmit}
+                                setActiveSection={setActiveSection}
+                                projects={projects}
+                                formatDate={formatDate}
+                                getPackageName={getPackageName}
+                                getStatusColor={getStatusColor}
+                            />
                         )}
 
                         {/* Support Section */}
                         {activeSection === 'support' && (
-                            <div className="animate-fadeIn">
-                                <div className="mb-8">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h1 className="font-jetbrains text-4xl font-bold text-black mb-2">
-                                                Support Tickets
-                                            </h1>
-                                            <p className="text-gray-600">
-                                                Get help with your website project or billing questions
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={() => setShowNewTicket(true)}
-                                            className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-                                        >
-                                            New Ticket
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* New Ticket Form */}
-                                {showNewTicket && (
-                                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-                                        <div className="flex items-center justify-between mb-6">
-                                            <h2 className="text-2xl font-bold text-black">Create New Ticket</h2>
-                                            <button
-                                                onClick={() => setShowNewTicket(false)}
-                                                className="text-gray-500 hover:text-gray-700"
-                                            >
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
-
-                                        <form onSubmit={handleSubmitTicket} className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Subject *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={newTicket.subject}
-                                                    onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                                    placeholder="Brief description of your issue"
-                                                />
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Category
-                                                    </label>
-                                                    <select
-                                                        value={newTicket.category}
-                                                        onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                                    >
-                                                        <option value="general">General Support</option>
-                                                        <option value="technical">Technical Issue</option>
-                                                        <option value="billing">Billing Question</option>
-                                                        <option value="feature">Feature Request</option>
-                                                    </select>
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Priority
-                                                    </label>
-                                                    <select
-                                                        value={newTicket.priority}
-                                                        onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
-                                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                                    >
-                                                        <option value="low">Low</option>
-                                                        <option value="medium">Medium</option>
-                                                        <option value="high">High</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Message *
-                                                </label>
-                                                <textarea
-                                                    required
-                                                    rows={6}
-                                                    value={newTicket.message}
-                                                    onChange={(e) => setNewTicket({ ...newTicket, message: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                                    placeholder="Please describe your issue in detail..."
-                                                />
-                                            </div>
-
-                                            <div className="flex justify-end space-x-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowNewTicket(false)}
-                                                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    type="submit"
-                                                    disabled={submitting}
-                                                    className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-                                                >
-                                                    {submitting ? 'Creating...' : 'Create Ticket'}
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                )}
-
-                                {/* Tickets List */}
-                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                                    <h2 className="text-2xl font-bold text-black mb-6">Your Support Tickets</h2>
-                                    {tickets.length > 0 ? (
-                                        <div className="space-y-4">
-                                            {tickets.map((ticket) => (
-                                                <div key={ticket.id} className="border border-gray-200 rounded-lg p-6">
-                                                    <div className="flex flex-col md:flex-row md:items-center justify-between">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center space-x-3 mb-2">
-                                                                <h3 className="font-semibold text-black">
-                                                                    {ticket.subject}
-                                                                </h3>
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                                                                    {ticket.status}
-                                                                </span>
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                                                                    {ticket.priority}
-                                                                </span>
-                                                            </div>
-                                                            <p className="text-sm text-gray-600 mb-2">
-                                                                Category: {getCategoryName(ticket.category)}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                Created: {formatDate(ticket.createdAt)}
-                                                            </p>
-                                                            {ticket.message && (
-                                                                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                                                                    {ticket.message}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex space-x-2 mt-4 md:mt-0">
-                                                            <Link
-                                                                href={`/contact?ticket=${ticket.id}`}
-                                                                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm"
-                                                            >
-                                                                View Details
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-12">
-                                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
-                                            <h3 className="text-lg font-semibold text-black mb-2">No tickets yet</h3>
-                                            <p className="text-gray-600 mb-6">Create your first support ticket to get help</p>
-                                            <button
-                                                onClick={() => setShowNewTicket(true)}
-                                                className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-                                            >
-                                                Create First Ticket
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Support Information */}
-                                <div className="bg-blue-50 rounded-lg p-6 mt-8">
-                                    <div className="flex items-start space-x-4">
-                                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 109.75 9.75A9.75 9.75 0 0012 2.25z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold text-black mb-2">Need Immediate Help?</h3>
-                                            <p className="text-gray-600 mb-4">
-                                                For urgent issues or quick questions, you can also contact us directly through our contact form.
-                                            </p>
-                                            <Link
-                                                href="/contact"
-                                                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                                            >
-                                                Contact Support
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <Support
+                                showNewTicket={showNewTicket}
+                                setShowNewTicket={setShowNewTicket}
+                                newTicket={newTicket}
+                                setNewTicket={setNewTicket}
+                                submitting={submitting}
+                                handleSubmitTicket={handleSubmitTicket}
+                                tickets={tickets}
+                                formatDate={formatDate}
+                                getPriorityColor={getPriorityColor}
+                                getStatusColor={getStatusColor}
+                                getCategoryName={getCategoryName}
+                                selectedTicket={selectedTicket}
+                                setSelectedTicket={setSelectedTicket}
+                                user={user}
+                            />
                         )}
 
                         {/* Billing Section */}
                         {activeSection === 'billing' && (
-                            <div className="animate-fadeIn">
-                                <div className="mb-8">
-                                    <h1 className="font-jetbrains text-4xl font-bold text-black mb-2">
-                                        Billing & Payments
-                                    </h1>
-                                    <p className="text-gray-600">
-                                        View your invoices and manage payments
-                                    </p>
-                                </div>
+                            <Billing
+                                selectedCurrency={selectedCurrency}
+                                setSelectedCurrency={setSelectedCurrency}
+                                userLocation={userLocation}
+                                effectiveCurrency={effectiveCurrency}
+                                getCurrentPricing={getCurrentPricing}
+                                formatPrice={formatPrice}
+                                setActiveSection={setActiveSection}
+                                invoices={invoices}
+                                formatDate={formatDate}
+                                formatCurrency={formatCurrency}
+                            />
+                        )}
 
-                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                                    <div className="text-center py-12">
-                                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="text-lg font-semibold text-black mb-2">Billing Features Coming Soon</h3>
-                                        <p className="text-gray-600 mb-6">We're working on bringing you comprehensive billing and payment management features.</p>
-                                        <button
-                                            onClick={() => setActiveSection('support')}
-                                            className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-                                        >
-                                            Contact Support
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                        {/* Profile Section */}
+                        {activeSection === 'profile' && (
+                            <Profile
+                                user={user}
+                                userData={userData}
+                            />
                         )}
                     </div>
                 </div>

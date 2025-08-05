@@ -33,7 +33,7 @@ export default function Home() {
               What can we help you build today?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link href="/order" prefetch={true}>
+              <Link href="/services" prefetch={true}>
                 <button className="w-full bg-white border-2 border-gray-300 rounded-lg p-6 text-left font-inter text-lg font-medium text-gray-800 cursor-pointer transition-all duration-300 hover:border-gray-500 hover:bg-gray-50 hover:-translate-y-1 hover:shadow-lg active:translate-y-0">
                   I need a simple website
                 </button>

@@ -25,15 +25,22 @@ export default function Login() {
                     if (userDoc.exists()) {
                         const data = userDoc.data();
 
-                        // Redirect all users back to the page they came from
-                        const returnUrl = router.query.returnUrl || '/';
+                        // Redirect all users back to the page they came from, or to client portal by default
+                        const returnUrl = router.query.returnUrl || '/client';
                         router.push(returnUrl);
                         return;
                     } else {
                         // User exists in Auth but not in Firestore - create user document
                         console.log('Creating missing user document for:', user.uid);
+                        const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+                        const nameParts = displayName.split(' ');
+                        const firstName = nameParts[0] || '';
+                        const lastName = nameParts.slice(1).join(' ') || '';
+
                         await setDoc(doc(db, 'users', user.uid), {
-                            name: user.displayName || user.email?.split('@')[0] || 'User',
+                            name: displayName,
+                            firstName: firstName,
+                            lastName: lastName,
                             email: user.email,
                             role: 'client',
                             createdAt: new Date().toISOString(),
@@ -41,14 +48,14 @@ export default function Login() {
                         });
 
                         // Redirect after creating the document
-                        const returnUrl = router.query.returnUrl || '/';
+                        const returnUrl = router.query.returnUrl || '/client';
                         router.push(returnUrl);
                         return;
                     }
                 } catch (error) {
                     console.error('Error fetching user data:', error);
-                    // Fallback to home page if there's an error
-                    router.push('/');
+                    // Fallback to client portal if there's an error
+                    router.push('/client');
                 }
             }
             setCheckingAuth(false);

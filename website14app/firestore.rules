@@ -52,6 +52,22 @@ service cloud.firestore {
       allow write: if request.auth != null && isAdmin();
     }
     
+    // ticketResponses collection - clients can read responses for their tickets, create responses for their tickets, admins can read/write all
+    match /ticketResponses/{responseId} {
+      allow read: if request.auth != null && (
+        // Users can read responses for tickets they own
+        exists(/databases/$(database)/documents/tickets/$(resource.data.ticketId)) &&
+        get(/databases/$(database)/documents/tickets/$(resource.data.ticketId)).data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.ticketId is string &&
+        request.resource.data.message is string &&
+        request.resource.data.createdAt is timestamp;
+      allow write: if request.auth != null && isAdmin();
+    }
+    
     // projects collection - clients can read their own projects, admins can read/write all
     match /projects/{projectId} {
       allow read: if request.auth != null && (
@@ -59,6 +75,21 @@ service cloud.firestore {
         isAdmin()
       );
       allow create: if request.auth != null;
+      allow write: if request.auth != null && isAdmin();
+    }
+    
+    // invoices collection - clients can read their own invoices, admins can read/write all
+    match /invoices/{invoiceId} {
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid || 
+        isAdmin()
+      );
+      allow create: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.businessName is string &&
+        request.resource.data.invoiceNumber is string &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.updatedAt is timestamp;
       allow write: if request.auth != null && isAdmin();
     }
     
@@ -72,6 +103,13 @@ service cloud.firestore {
     match /blog/{postId} {
       allow read: if true; // Public read access for blog posts
       allow write: if request.auth != null && isAdmin(); // Only admins can create/edit posts
+    }
+    
+    // notifications collection - clients can create notifications, admins can read/write all
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && isAdmin();
+      allow create: if request.auth != null;
+      allow write: if request.auth != null && isAdmin();
     }
     
     // Default deny all

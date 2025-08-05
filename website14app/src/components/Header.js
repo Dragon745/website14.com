@@ -39,6 +39,8 @@ export default function Header() {
     const handleLogout = async () => {
         try {
             await signOut(auth);
+            // Redirect to home page after successful logout
+            router.push('/');
         } catch (error) {
             console.error('Error signing out:', error);
         }
@@ -62,39 +64,41 @@ export default function Header() {
                         {!loading && (
                             <>
                                 {user ? (
-                                    <div className="relative">
-                                        <button
-                                            onClick={() => setShowUserMenu(!showUserMenu)}
-                                            onBlur={() => setTimeout(() => setShowUserMenu(false), 200)}
-                                            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+                                    <div className="flex items-center space-x-4">
+                                        <Link
+                                            href="/client"
+                                            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors font-medium"
                                         >
-                                            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                            Client Portal
+                                        </Link>
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setShowUserMenu(!showUserMenu)}
+                                                onBlur={() => setTimeout(() => setShowUserMenu(false), 200)}
+                                                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+                                            >
+                                                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                                    <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                                <span className="hidden md:block">{userData?.name || user.email}</span>
+                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                                                 </svg>
-                                            </div>
-                                            <span className="hidden md:block">{userData?.name || user.email}</span>
-                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                            </svg>
-                                        </button>
+                                            </button>
 
-                                        {showUserMenu && (
-                                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                                <Link
-                                                    href="/client"
-                                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                >
-                                                    Client Portal
-                                                </Link>
-                                                <button
-                                                    onClick={handleLogout}
-                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                >
-                                                    Logout
-                                                </button>
-                                            </div>
-                                        )}
+                                            {showUserMenu && (
+                                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                                    <button
+                                                        onClick={handleLogout}
+                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    >
+                                                        Logout
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 ) : (
                                     <Link

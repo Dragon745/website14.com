@@ -1185,6 +1185,7 @@ function PricingTab() {
         searchFunctionality: 0,
         imageGallery: 0,
         videoIntegration: 0,
+        logoDesign: 0,
 
         // Long-term discounts
         yearlyDiscount: 0,
@@ -2030,6 +2031,24 @@ function PricingTab() {
                                         />
                                     </div>
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Logo Design
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                            {currencies.find(c => c.code === selectedCurrency)?.symbol}
+                                        </span>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={pricingData.logoDesign || 0}
+                                            onChange={(e) => handleInputChange('logoDesign', e.target.value)}
+                                            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -2375,8 +2394,8 @@ function BlogTab({ blogPosts, onRefresh }) {
                                     <p className="text-sm text-gray-600 mt-1">{post.excerpt}</p>
                                     <div className="flex items-center space-x-4 mt-2">
                                         <span className={`px-2 py-1 text-xs rounded-full ${post.status === 'published'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-yellow-100 text-yellow-800'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-yellow-100 text-yellow-800'
                                             }`}>
                                             {post.status}
                                         </span>
