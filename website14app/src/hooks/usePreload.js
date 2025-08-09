@@ -28,7 +28,8 @@ export const usePreload = () => {
             '/login',
             '/signup',
             '/builder',
-            '/blog'
+            '/blog',
+            '/tools/speed-test'
         ];
 
         try {

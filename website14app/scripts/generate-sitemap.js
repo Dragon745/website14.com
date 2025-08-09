@@ -30,6 +30,7 @@ async function generateSitemap() {
             { url: 'https://website14.com/faq', priority: '0.7', changefreq: 'monthly' },
             { url: 'https://website14.com/builder', priority: '0.9', changefreq: 'monthly' },
             { url: 'https://website14.com/blog', priority: '0.8', changefreq: 'weekly' },
+            { url: 'https://website14.com/tools/speed-test', priority: '0.8', changefreq: 'monthly' },
             { url: 'https://website14.com/login', priority: '0.6', changefreq: 'monthly' },
             { url: 'https://website14.com/signup', priority: '0.6', changefreq: 'monthly' }
         ];

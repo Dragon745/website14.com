@@ -10,6 +10,7 @@ export default function Header() {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showToolsMenu, setShowToolsMenu] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -56,9 +57,34 @@ export default function Header() {
 
                     <div className="flex items-center space-x-8">
                         <Link href="/services" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">Services</Link>
-                        <Link href="/blog" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">Blog</Link>
                         <Link href="/about" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">About</Link>
                         <Link href="/faq" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">FAQ</Link>
+                        <Link href="/blog" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">Blog</Link>
+
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowToolsMenu(!showToolsMenu)}
+                                onBlur={() => setTimeout(() => setShowToolsMenu(false), 200)}
+                                className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors"
+                            >
+                                <span>Tools</span>
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+
+                            {showToolsMenu && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                    <Link
+                                        href="/tools/speed-test"
+                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    >
+                                        Speed Test
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+
                         <Link href="/contact" prefetch={true} className="text-gray-600 hover:text-gray-900 transition-colors">Contact</Link>
 
                         {!loading && (

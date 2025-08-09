@@ -43,6 +43,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://website14.com/tools/speed-test</loc>
+    <lastmod>2024-01-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://website14.com/login</loc>
     <lastmod>2024-01-01</lastmod>
     <changefreq>monthly</changefreq>

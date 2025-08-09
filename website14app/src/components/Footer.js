@@ -9,6 +9,7 @@ export default function Footer() {
     const [user, setUser] = useState(null);
     const [userData, setUserData] = useState(null);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showToolsMenu, setShowToolsMenu] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -63,6 +64,34 @@ export default function Footer() {
                         <Link href="/faq" prefetch={true} className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
                             FAQ
                         </Link>
+                    </li>
+                    <li>
+                        <Link href="/blog" prefetch={true} className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
+                            Blog
+                        </Link>
+                    </li>
+                    <li className="relative">
+                        <button
+                            onClick={() => setShowToolsMenu(!showToolsMenu)}
+                            onBlur={() => setTimeout(() => setShowToolsMenu(false), 200)}
+                            className="flex items-center space-x-1 text-gray-500 hover:text-black transition-colors duration-300 font-inter"
+                        >
+                            <span>Tools</span>
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+
+                        {showToolsMenu && (
+                            <div className="absolute bottom-full mb-2 right-0 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                <Link
+                                    href="/tools/speed-test"
+                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                    Speed Test
+                                </Link>
+                            </div>
+                        )}
                     </li>
                     <li>
                         <Link href="/contact" prefetch={true} className="text-gray-500 hover:text-black transition-colors duration-300 font-inter">
