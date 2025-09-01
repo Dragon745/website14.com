@@ -1,0 +1,15 @@
+Read and analyze the entire project, reviewing each and every file to fully understand the complete scope.  
+Once you have the full context, focus on understanding the Firebase Datastore usage.  
+
+Key requirements:  
+- Identify every datastore (Firestore collections).  
+- List what collections exist, what information each collection stores, and the key fields in them.  
+
+Task:  
+- Create the file `docs/firebase_datastore_details.md`.  
+- Keep explanations short and precise (just enough detail for the AI to understand later).  
+- Add Mermaid diagrams to visually represent relationships between collections for human understanding.  
+
+Important:  
+- Do not write lengthy descriptions.  
+- Be clear, concise, and structured.  
