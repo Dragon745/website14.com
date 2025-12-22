@@ -8,8 +8,14 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
+        sans: ["Source Sans Pro", "sans-serif"],
+        heading: ["Inter Display", "sans-serif"],
+        subheading: ["Work Sans", "sans-serif"],
+        body: ["Source Sans Pro", "sans-serif"],
+        logo: ["Bodoni Moda", "serif"],
         jetbrains: ["JetBrains Mono", "monospace"],
-        inter: ["Inter", "sans-serif"],
+        // Keep inter for backward compatibility
+        inter: ["Source Sans Pro", "sans-serif"],
       },
     },
   },

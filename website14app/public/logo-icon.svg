@@ -1,25 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
   <defs>
-    <linearGradient id="faviconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
       <stop offset="50%" style="stop-color:#6d28d9;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#5b21b6;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="faviconIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#a78bfa;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
     </linearGradient>
   </defs>
   
   <!-- Background circle with gradient -->
-  <circle cx="12" cy="12" r="11" fill="url(#faviconGradient)"/>
+  <circle cx="12" cy="12" r="11" fill="url(#logoGradient)"/>
   
   <!-- Browser/Window frame with shadow effect -->
   <rect x="4" y="6" width="16" height="12" rx="1.5" fill="white" opacity="0.98"/>
-  <rect x="4" y="6" width="16" height="12" rx="1.5" fill="none" stroke="url(#faviconIconGradient)" stroke-width="0.5" opacity="0.3"/>
+  <rect x="4" y="6" width="16" height="12" rx="1.5" fill="none" stroke="url(#iconGradient)" stroke-width="0.5" opacity="0.3"/>
   
   <!-- Browser header bar -->
-  <rect x="4" y="6" width="16" height="3" rx="1.5" fill="url(#faviconIconGradient)" opacity="0.15"/>
+  <rect x="4" y="6" width="16" height="3" rx="1.5" fill="url(#iconGradient)" opacity="0.15"/>
   <line x1="4" y1="9" x2="20" y2="9" stroke="#6d28d9" stroke-width="0.5" opacity="0.4"/>
   
   <!-- Browser control dots (more refined) -->

@@ -22,7 +22,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter", Arial, Helvetica, sans-serif;
+  font-family: "Source Sans Pro", Arial, Helvetica, sans-serif;
 }
 
 .font-jetbrains {
@@ -31,6 +31,22 @@ body {
 
 .font-inter {
   font-family: "Inter", sans-serif;
+}
+
+.font-logo {
+  font-family: "Bodoni Moda", serif;
+}
+
+.font-heading {
+  font-family: "Inter Display", sans-serif;
+}
+
+.font-subheading {
+  font-family: "Work Sans", sans-serif;
+}
+
+.font-body {
+  font-family: "Source Sans Pro", sans-serif;
 }
 
 /* Smooth transitions for client portal */
