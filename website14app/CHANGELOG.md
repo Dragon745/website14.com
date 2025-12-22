@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [3.1.0] - Tuesday, 23 December, 2025 04:14:26 AM
+
+### Added
+
+- Created `docs/services-page-improvements.md` - Comprehensive guide with 15 detailed recommendations for enhancing the services page, including interactive features, social proof, FAQ section, and conversion optimization strategies
+- Created `docs/theme.md` - Theme guide documenting colors, fonts, design style, and design concepts
+- Enhanced homepage SEO with comprehensive structured data schemas
+  - Added WebSite schema with SearchAction for better search engine understanding
+  - Added Service schemas for Static Websites, Dynamic Websites, and E-commerce Solutions
+  - Enhanced Organization schema with `areaServed` and `knowsAbout` fields
+  - Multiple schema support in SEO component for richer structured data
+- Added `aria-hidden="true"` attributes to decorative SVG icons for improved accessibility and SEO
+
+### Changed
+
+- **Complete redesign of services page** with new corporate theme
+  - Updated hero section with purple/slate color scheme and new typography (Inter Display, Work Sans, Source Sans Pro)
+  - Redesigned service cards (Static, Dynamic, E-commerce) with modern styling, icons, and improved visual hierarchy
+  - Updated "Why Choose Website14" section with new design and purple accent colors
+  - Redesigned testimonials section with improved card styling
+  - Updated feature comparison table with new color scheme
+  - Redesigned add-ons, hosting plans, and email hosting sections with consistent corporate styling
+  - Added SEO component to services page
+  - **All pricing logic and functionality preserved** - currency detection, dynamic pricing, discounts, and package selection remain intact
+- Updated contact email address from `info@website14.com` to `contact@website14.com` in homepage structured data
+- SEO component now supports both single structured data objects and arrays of multiple schemas
+- Updated package.json version from `0.1.0` to `3.1.0` to match CHANGELOG versioning
+
 ## [3.0.0] - Monday, 22 December, 2025 07:53:15 PM
 
 ### Added

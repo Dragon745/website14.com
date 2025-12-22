@@ -1,9 +1,9 @@
-import Head from 'next/head';
 import Link from 'next/link';
 import { useLocation } from '../hooks/useLocation';
 import { usePricing } from '../hooks/usePricing';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 
 export default function Home() {
   // Use the location hook for future use
@@ -11,15 +11,196 @@ export default function Home() {
 
   // Use the pricing hook to pre-load pricing data
   const { pricingData, isLoading: pricingLoading } = usePricing(userLocation?.currency);
-  
+
+  // Structured data for homepage - Multiple schemas for comprehensive SEO
+  const structuredData = [
+    // Organization Schema
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Website14",
+      "url": "https://website14.com",
+      "logo": "https://website14.com/logo-icon.svg",
+      "description": "Professional web development services with unlimited updates, 24/7 support, and enterprise-grade solutions.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "US"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "contact@website14.com",
+        "contactType": "Customer Service",
+        "availableLanguage": "English"
+      },
+      "sameAs": [
+        "https://twitter.com/website14",
+        "https://linkedin.com/company/website14",
+        "https://facebook.com/website14",
+        "https://github.com/website14"
+      ],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "500"
+      },
+      "offers": {
+        "@type": "Offer",
+        "description": "Professional web development services",
+        "priceCurrency": "USD"
+      },
+      "areaServed": "Worldwide",
+      "knowsAbout": [
+        "Web Development",
+        "Website Design",
+        "E-commerce Development",
+        "Mobile-First Design",
+        "SEO Optimization"
+      ]
+    },
+    // WebSite Schema with SearchAction
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Website14",
+      "url": "https://website14.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://website14.com/search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    // Service Schema - Static Websites
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "Static Website Development",
+      "provider": {
+        "@type": "Organization",
+        "name": "Website14"
+      },
+      "description": "Professional static websites perfect for portfolios, landing pages, and simple business sites. Fast, secure, and optimized for performance with 5 pages included, mobile-first design, and SEO optimization.",
+      "areaServed": "Worldwide",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Static Website Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "5 Pages Included"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Mobile-First Design"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "SEO Optimization"
+            }
+          }
+        ]
+      }
+    },
+    // Service Schema - Dynamic Websites
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "Dynamic Website Development",
+      "provider": {
+        "@type": "Organization",
+        "name": "Website14"
+      },
+      "description": "Ideal for blogs, service businesses, and content-heavy sites with CMS capabilities and payment integration. Includes 7 pages + CMS, payment gateway, and admin dashboard.",
+      "areaServed": "Worldwide",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Dynamic Website Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "7 Pages + CMS"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Payment Gateway Integration"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Admin Dashboard"
+            }
+          }
+        ]
+      }
+    },
+    // Service Schema - E-commerce Solutions
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "E-commerce Development",
+      "provider": {
+        "@type": "Organization",
+        "name": "Website14"
+      },
+      "description": "Complete online stores with inventory management, payment processing, and order tracking capabilities. Includes 30 products, multiple payment gateways, and inventory management.",
+      "areaServed": "Worldwide",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "E-commerce Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "30 Products Included"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Multiple Payment Gateways"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Inventory Management"
+            }
+          }
+        ]
+      }
+    }
+  ];
+
   return (
     <>
-      <Head>
-        <title>Website14 - Professional Web Development Services</title>
-        <meta name="description" content="Get a professional, mobile-first website with unlimited updates for less than DIY platforms. Trusted by 500+ businesses." />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-      </Head>
+      <SEO
+        title="Website14 - Professional Web Development Services"
+        description="Get a professional, mobile-first website with unlimited updates for less than DIY platforms. Trusted by 500+ businesses worldwide."
+        keywords="web development, website design, professional websites, custom websites, web development services, mobile-first design, website maintenance"
+        url="https://website14.com"
+        type="website"
+        structuredData={structuredData}
+      />
 
       <div className="bg-white text-slate-900 font-sans min-h-screen flex flex-col">
         <Header />
@@ -38,7 +219,7 @@ export default function Home() {
                   <span className="text-purple-800 block">Solutions for Your Business</span>
                 </h1>
                 <p className="text-xl text-gray-600 mb-8 leading-relaxed font-body">
-                  Transform your online presence with custom-built, mobile-first websites. 
+                  Transform your online presence with custom-built, mobile-first websites.
                   Get unlimited updates, 24/7 support, and enterprise-grade solutions at affordable prices.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 mb-10">
@@ -55,13 +236,13 @@ export default function Home() {
                 </div>
                 <div className="flex flex-wrap items-center gap-8 text-sm text-gray-600">
                   <div className="flex items-center space-x-2">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="font-medium">30-Day Money-Back Guarantee</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="font-medium">Unlimited Updates Included</span>
@@ -138,7 +319,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-200 hover:border-purple-200">
                 <div className="w-14 h-14 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
-                  <svg className="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
@@ -148,19 +329,19 @@ export default function Home() {
                 </p>
                 <ul className="space-y-2 mb-6">
                   <li className="flex items-center text-sm text-slate-700">
-                    <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     5 Pages Included
                   </li>
                   <li className="flex items-center text-sm text-slate-700">
-                    <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Mobile-First Design
                   </li>
                   <li className="flex items-center text-sm text-slate-700">
-                    <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     SEO Optimized
@@ -318,7 +499,7 @@ export default function Home() {
               Ready to Transform Your Online Presence?
             </h2>
             <p className="text-xl text-slate-200 mb-10 max-w-3xl mx-auto font-body">
-              Join 500+ businesses who trust Website14 for their web development needs. 
+              Join 500+ businesses who trust Website14 for their web development needs.
               Get started with a free consultation today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
