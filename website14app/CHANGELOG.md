@@ -7,10 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.1] - Tuesday, 23 December, 2025 09:08:47 AM
+
+### Changed
+
+- **Removed scroll fade-in effects** from services page for better performance and user experience
+  - Removed all `ScrollFadeIn` components and related imports
+  - Maintained all visual design enhancements while eliminating distracting animations
+  - Improved page load performance by removing unnecessary animation components
+
+### Fixed
+
+- **Fixed multiple syntax errors** in services.js file
+  - Corrected malformed JSX tags with extra spaces (`< section` → `<section`)
+  - Fixed incorrect closing tag syntax (`</ >` → `</section`)
+  - Resolved indentation and structure issues in component rendering
+  - Ensured proper JSX element nesting and closing tags
+
 ## [3.1.0] - Tuesday, 23 December, 2025 04:14:26 AM
 
 ### Added
 
+- **Animated Statistics Counter** - Implemented scroll-triggered animated counters for trust indicators on services page
+  - Created reusable `AnimatedCounter` component with Intersection Observer API
+  - Animates numbers from 0 to target value when section enters viewport
+  - Supports custom suffixes (+, %, Days) and prefixes
+  - Respects `prefers-reduced-motion` accessibility preference
+  - Performance optimized with `requestAnimationFrame` and easing functions
+  - Applied to: 500+ Happy Clients, 98% Satisfaction Rate, 30 Days Money Back Guarantee
 - Created `docs/services-page-improvements.md` - Comprehensive guide with 15 detailed recommendations for enhancing the services page, including interactive features, social proof, FAQ section, and conversion optimization strategies
 - Created `docs/theme.md` - Theme guide documenting colors, fonts, design style, and design concepts
 - Enhanced homepage SEO with comprehensive structured data schemas
