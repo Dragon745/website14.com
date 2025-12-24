@@ -1,0 +1,11 @@
+export { default as HeroSection } from './HeroSection';
+export { default as ServicesGrid } from './ServicesGrid';
+export { default as WhyChooseSection } from './WhyChooseSection';
+export { default as TechnologyStackSection } from './TechnologyStackSection';
+export { default as TestimonialsSection } from './TestimonialsSection';
+export { default as FeatureComparison } from './FeatureComparison';
+export { default as AddonsSection } from './AddonsSection';
+export { default as AdditionalFeaturesSection } from './AdditionalFeaturesSection';
+export { default as HostingPlansSection } from './HostingPlansSection';
+export { default as EmailHostingSection } from './EmailHostingSection';
+export { default as FinalCTA } from './FinalCTA';
