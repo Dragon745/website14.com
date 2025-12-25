@@ -3,10 +3,14 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import Link from 'next/link';
-import Head from 'next/head';
+import SEO from '../../components/SEO';
+import { organizationSchema } from '../../data/seoData';
 import { usePreload } from '../../hooks/usePreload';
+import BlogHero from '../../components/blog/BlogHero';
+import BlogCard from '../../components/blog/BlogCard';
+import NewsletterCTA from '../../components/blog/NewsletterCTA';
 
+// ... getStaticProps remains the same ...
 // This function runs at build time to get all blog posts
 export async function getStaticProps() {
     try {
@@ -71,7 +75,7 @@ export default function Blog({ posts }) {
                 post.tags.forEach(tag => tags.add(tag));
             }
         });
-        return Array.from(tags);
+        return Array.from(tags).sort();
     };
 
     const filteredPosts = posts.filter(post => {
@@ -82,139 +86,90 @@ export default function Blog({ posts }) {
         return matchesSearch && matchesTag;
     });
 
-    const truncateText = (text, maxLength) => {
-        if (text.length <= maxLength) return text;
-        return text.substring(0, maxLength) + '...';
-    };
+    const structuredData = [
+        organizationSchema,
+        {
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            "name": "Website14 Blog",
+            "description": "Insights, tips, and updates from our web development team",
+            "url": "https://website14.com/blog",
+            "publisher": {
+                "@id": "https://website14.com/#organization"
+            },
+            "blogPost": posts.slice(0, 5).map(post => ({
+                "@type": "BlogPosting",
+                "headline": post.title,
+                "description": post.excerpt,
+                "datePublished": post.publishedAt,
+                "url": `https://website14.com/blog/${post.slug}`,
+                "author": {
+                    "@type": "Organization",
+                    "name": "Website14 Team"
+                }
+            }))
+        }
+    ];
 
     return (
         <>
-            <Head>
-                <title>Blog | Website14</title>
-                <meta name="description" content="Insights, tips, and updates from our web development team" />
-                <meta name="keywords" content="web development, blog, tips, insights, website14" />
-                <meta property="og:title" content="Blog | Website14" />
-                <meta property="og:description" content="Insights, tips, and updates from our web development team" />
-                <meta property="og:type" content="website" />
-                <meta property="og:url" content="https://website14.com/blog" />
-                <link rel="canonical" href="https://website14.com/blog" />
-            </Head>
-            <Header />
-            <div className="min-h-screen bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    {/* Header */}
-                    <div className="text-center mb-12">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-4">Blog</h1>
-                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            Insights, tips, and updates from our web development team
-                        </p>
+            <SEO
+                title="Blog | Website14"
+                description="Insights, tips, and updates from our web development team"
+                keywords="web development, blog, tips, insights, website14"
+                url="https://website14.com/blog"
+                type="website"
+                structuredData={structuredData}
+            />
+
+            <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
+                <Header />
+
+                <main className="flex-1">
+                    <BlogHero
+                        searchTerm={searchTerm}
+                        setSearchTerm={setSearchTerm}
+                        selectedTag={selectedTag}
+                        setSelectedTag={setSelectedTag}
+                        allTags={getAllTags()}
+                    />
+
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                        {filteredPosts.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {filteredPosts.map((post) => (
+                                    <BlogCard key={post.id} post={post} formatDate={formatDate} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-24 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                                <div className="text-slate-300 mb-6">
+                                    <svg className="mx-auto h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-2xl font-bold text-slate-900 mb-2">No articles found</h3>
+                                <p className="text-slate-500 max-w-md mx-auto">
+                                    We couldn't find any articles matching your search criteria. Try adjusting keywords or filters.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Pagination placeholder if needed in future */}
+                        {filteredPosts.length > 0 && (
+                            <div className="mt-16 text-center">
+                                <p className="text-sm text-slate-500">
+                                    Showing {filteredPosts.length} of {posts.length} articles
+                                </p>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Search and Filter */}
-                    <div className="mb-8">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    placeholder="Search posts..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div className="sm:w-48">
-                                <select
-                                    value={selectedTag}
-                                    onChange={(e) => setSelectedTag(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">All Tags</option>
-                                    {getAllTags().map(tag => (
-                                        <option key={tag} value={tag}>{tag}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                    <NewsletterCTA />
+                </main>
 
-                    {/* Posts Grid */}
-                    {filteredPosts.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {filteredPosts.map((post) => (
-                                <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                                    <div className="p-6">
-                                        <div className="flex items-center text-sm text-gray-500 mb-3">
-                                            <time dateTime={post.publishedAt}>
-                                                {formatDate(post.publishedAt)}
-                                            </time>
-                                            {post.tags && post.tags.length > 0 && (
-                                                <span className="mx-2">•</span>
-                                            )}
-                                            {post.tags && post.tags.slice(0, 2).map((tag, index) => (
-                                                <span key={tag} className="text-blue-600">
-                                                    {tag}{index < Math.min(post.tags.length - 1, 1) ? ', ' : ''}
-                                                </span>
-                                            ))}
-                                        </div>
-
-                                        <h2 className="text-xl font-bold text-gray-900 mb-3">
-                                            <Link href={`/blog/${post.slug}`} prefetch={true} className="hover:text-blue-600 transition-colors">
-                                                {post.title}
-                                            </Link>
-                                        </h2>
-
-                                        {post.excerpt && (
-                                            <p className="text-gray-600 mb-4">
-                                                {truncateText(post.excerpt.replace(/[#*`\[\]]/g, ''), 150)}
-                                            </p>
-                                        )}
-
-                                        <div className="flex justify-between items-center">
-                                            <Link
-                                                href={`/blog/${post.slug}`}
-                                                prefetch={true}
-                                                className="text-blue-600 hover:text-blue-700 font-medium"
-                                            >
-                                                Read more →
-                                            </Link>
-                                            {post.tags && post.tags.length > 2 && (
-                                                <span className="text-sm text-gray-500">
-                                                    +{post.tags.length - 2} more tags
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-12">
-                            <div className="text-gray-400 mb-4">
-                                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No posts found</h3>
-                            <p className="text-gray-600">
-                                {searchTerm || selectedTag
-                                    ? 'Try adjusting your search or filter criteria.'
-                                    : 'No blog posts have been published yet.'
-                                }
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Pagination */}
-                    {filteredPosts.length > 0 && (
-                        <div className="mt-12 text-center">
-                            <p className="text-gray-600">
-                                Showing {filteredPosts.length} of {posts.length} posts
-                            </p>
-                        </div>
-                    )}
-                </div>
+                <Footer />
             </div>
-            <Footer />
         </>
     );
 } 

@@ -5,7 +5,8 @@ import { db } from '../../lib/firebase';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import Link from 'next/link';
-import Head from 'next/head';
+import SEO from '../../components/SEO';
+import { organizationSchema } from '../../data/seoData';
 
 // This function runs at build time to generate all possible blog post paths
 export async function getStaticPaths() {
@@ -333,23 +334,67 @@ export default function BlogPost({ post, relatedPosts }) {
         );
     }
 
+    const structuredData = [
+        organizationSchema,
+        {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "https://website14.com"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Blog",
+                    "item": "https://website14.com/blog"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": post.title,
+                    "item": `https://website14.com/blog/${post.slug}`
+                }
+            ]
+        },
+        {
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": post.title,
+            "description": post.seo?.metaDescription || post.excerpt,
+            "datePublished": post.publishedAt,
+            "dateModified": post.updatedAt || post.publishedAt,
+            "author": {
+                "@type": "Organization",
+                "name": "Website14 Team",
+                "url": "https://website14.com"
+            },
+            "publisher": {
+                "@id": "https://website14.com/#organization"
+            },
+            "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": `https://website14.com/blog/${post.slug}`
+            },
+            "image": post.coverImage || "https://website14.com/og-image.jpg",
+            "keywords": post.seo?.keywords || post.tags?.join(', ')
+        }
+    ];
+
     return (
         <>
-            <Head>
-                <title>{post.seo?.metaTitle || post.title} | Website14</title>
-                <meta name="description" content={post.seo?.metaDescription || post.excerpt} />
-                <meta name="keywords" content={post.seo?.keywords || post.tags?.join(', ')} />
-                <meta property="og:title" content={post.seo?.metaTitle || post.title} />
-                <meta property="og:description" content={post.seo?.metaDescription || post.excerpt} />
-                <meta property="og:type" content="article" />
-                <meta property="og:url" content={`https://website14.com/blog/${post.slug}`} />
-                <meta property="article:published_time" content={post.publishedAt} />
-                <meta property="article:author" content="Website14 Team" />
-                {post.tags?.map(tag => (
-                    <meta key={tag} property="article:tag" content={tag} />
-                ))}
-                <link rel="canonical" href={`https://website14.com/blog/${post.slug}`} />
-            </Head>
+            <SEO
+                title={post.seo?.metaTitle || post.title + " | Website14"}
+                description={post.seo?.metaDescription || post.excerpt}
+                keywords={post.seo?.keywords || post.tags?.join(', ')}
+                url={`https://website14.com/blog/${post.slug}`}
+                type="article"
+                structuredData={structuredData}
+                image={post.coverImage || "https://website14.com/og-image.jpg"}
+            />
 
             <Header />
             <div className="min-h-screen bg-gray-50">
